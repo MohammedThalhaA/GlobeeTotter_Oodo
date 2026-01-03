@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { authAPI, tripsAPI } from '../services/api';
 import Button from '../components/Button';
 import FloatingInput from '../components/FloatingInput';
+import SaveButton from '../components/SaveButton';
 import {
     User,
     Shield,
@@ -299,14 +300,12 @@ const Profile = () => {
                                             />
                                         </div>
 
-                                        <Button
+                                        <SaveButton
                                             onClick={handleSaveProfile}
-                                            loading={saving}
-                                            icon={saved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+                                            disabled={saving}
+                                            label={saved ? 'Saved!' : 'Save Changes'}
                                             className="w-full sm:w-auto"
-                                        >
-                                            {saved ? 'Saved!' : 'Save Changes'}
-                                        </Button>
+                                        />
                                     </div>
                                 )}
 

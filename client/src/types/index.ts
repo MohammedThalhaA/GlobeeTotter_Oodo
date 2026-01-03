@@ -20,6 +20,7 @@ export interface Trip {
     destination?: string;
     budget?: number;
     created_at?: string;
+    stop_count?: number;
 }
 
 export interface User {

@@ -215,13 +215,14 @@ const TripCalendar = () => {
                             {stops.length === 0 ? (
                                 <p className="text-slate-400 text-sm">No stops added</p>
                             ) : (
-                                <div className="space-y-3">
+                                <div className="space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
                                     {stops.map((stop) => (
-                                        <div key={stop.id} className="flex items-center gap-3">
-                                            <div className={`w-4 h-4 rounded ${cityColors.get(stop.city_name)?.split(' ')[0]}`} />
+                                        <div key={stop.id} className="flex items-start gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors">
+                                            <div className={`w-4 h-4 rounded mt-1.5 ${cityColors.get(stop.city_name)?.split(' ')[0]}`} />
                                             <div>
-                                                <p className="font-medium text-slate-900 text-sm">{stop.city_name}</p>
-                                                <p className="text-xs text-slate-500">
+                                                <p className="font-bold text-slate-800 text-sm">{stop.city_name}</p>
+                                                <p className="text-xs font-medium text-slate-500 mt-1 flex items-center gap-1">
+                                                    <CalendarIcon className="w-3 h-3" />
                                                     {new Date(stop.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} -{' '}
                                                     {new Date(stop.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                                 </p>
@@ -233,14 +234,14 @@ const TripCalendar = () => {
 
                             <hr className="my-4 border-slate-100" />
 
-                            <div className="space-y-2">
-                                <Link to={`/trips/${tripId}/edit`}>
-                                    <Button variant="secondary" size="sm" className="w-full">
+                            <div className="space-y-3">
+                                <Link to={`/trips/${tripId}/edit`} className="block w-full">
+                                    <Button variant="secondary" className="w-full flex items-center justify-center gap-2">
                                         Edit Itinerary
                                     </Button>
                                 </Link>
-                                <Link to={`/trips/${tripId}/budget`}>
-                                    <Button variant="secondary" size="sm" className="w-full">
+                                <Link to={`/trips/${tripId}/budget`} className="block w-full">
+                                    <Button variant="secondary" className="w-full flex items-center justify-center gap-2">
                                         View Budget
                                     </Button>
                                 </Link>

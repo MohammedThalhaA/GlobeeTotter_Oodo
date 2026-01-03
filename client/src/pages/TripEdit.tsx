@@ -6,9 +6,11 @@ import Input from '../components/Input';
 import UnsavedChangesModal from '../components/UnsavedChangesModal';
 import { useUnsavedChanges } from '../hooks/useUnsavedChanges';
 import { useToast } from '../context/ToastContext';
+import CustomDatePicker from '../components/CustomDatePicker';
+import CityAutocomplete from '../components/CityAutocomplete';
+import SaveButton from '../components/SaveButton';
 import {
     ArrowLeft,
-    Save,
     Plus,
     GripVertical,
     Trash2,
@@ -19,6 +21,7 @@ import {
     Loader2,
     X,
     Search,
+    Save
 } from 'lucide-react';
 
 interface Activity {
@@ -74,7 +77,7 @@ const TripEdit = () => {
     const tripId = Number(id);
 
     const [trip, setTrip] = useState<Trip | null>(null);
-    const [stops, setStops] = useState<Stop[]>([]);
+    const [stops, setStops] = useState<Stop[]>();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [expandedStop, setExpandedStop] = useState<number | null>(null);
@@ -82,7 +85,6 @@ const TripEdit = () => {
     // Unsaved changes protection
     const { isDirty, setIsDirty, showModal, confirmNavigation, cancelNavigation, markAsSaved } = useUnsavedChanges();
     const { showToast } = useToast();
-    void isDirty; // Used implicitly by the hook
 
     // Modal states
     const [showAddStop, setShowAddStop] = useState(false);
@@ -208,7 +210,9 @@ const TripEdit = () => {
                 notes: newStop.notes || undefined,
             });
             if (res.data.success) {
-                setStops([...stops, { ...res.data.data, activities: [] }]);
+                if (stops) {
+                    setStops([...stops, { ...res.data.data, activities: [] }]);
+                }
                 setShowAddStop(false);
                 setNewStop({ city_name: '', city_id: null, start_date: '', end_date: '', notes: '' });
                 setCitySearch('');
@@ -222,7 +226,9 @@ const TripEdit = () => {
         if (!window.confirm('Delete this stop and all its activities?')) return;
         try {
             await stopsAPI.delete(tripId, stopId);
-            setStops(stops.filter((s) => s.id !== stopId));
+            if (stops) {
+                setStops(stops.filter((s) => s.id !== stopId));
+            }
         } catch (error) {
             console.error('Failed to delete stop:', error);
         }
@@ -234,7 +240,7 @@ const TripEdit = () => {
 
     const handleDragOver = (e: React.DragEvent, targetId: number) => {
         e.preventDefault();
-        if (draggedStop === null || draggedStop === targetId) return;
+        if (draggedStop === null || draggedStop === targetId || !stops) return;
 
         const newStops = [...stops];
         const draggedIndex = newStops.findIndex((s) => s.id === draggedStop);
@@ -247,7 +253,7 @@ const TripEdit = () => {
     };
 
     const handleDragEnd = async () => {
-        if (draggedStop === null) return;
+        if (draggedStop === null || !stops) return;
         const stopIds = stops.map((s) => s.id);
         try {
             await stopsAPI.reorder(tripId, stopIds);
@@ -278,7 +284,7 @@ const TripEdit = () => {
     };
 
     const handleAddActivity = async () => {
-        if (!showAddActivity || !newActivity.activity_name) return;
+        if (!showAddActivity || !newActivity.activity_name || !stops) return;
         try {
             const res = await activitiesAPI.addToStop(showAddActivity, {
                 activity_name: newActivity.activity_name,
@@ -302,6 +308,7 @@ const TripEdit = () => {
     };
 
     const handleDeleteActivity = async (stopId: number, activityId: number) => {
+        if (!stops) return;
         try {
             await activitiesAPI.remove(activityId);
             setStops(stops.map((s) =>
@@ -366,9 +373,11 @@ const TripEdit = () => {
                             <Button variant="secondary" onClick={handleCancel}>
                                 Cancel
                             </Button>
-                            <Button onClick={handleSaveTrip} loading={saving} icon={<Save className="w-4 h-4" />}>
-                                Save Changes
-                            </Button>
+                            <SaveButton
+                                onClick={handleSaveTrip}
+                                disabled={saving}
+                                label="Save Changes"
+                            />
                         </div>
                     </div>
                 </div>
@@ -462,7 +471,7 @@ const TripEdit = () => {
                 <section className="bg-white rounded-2xl shadow-card p-6">
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-lg font-semibold text-slate-900">
-                            Itinerary ({stops.length} {stops.length === 1 ? 'stop' : 'stops'})
+                            Itinerary ({stops?.length || 0} {(stops?.length || 0) === 1 ? 'stop' : 'stops'})
                         </h2>
                         <Button
                             variant="secondary"
@@ -474,7 +483,7 @@ const TripEdit = () => {
                         </Button>
                     </div>
 
-                    {stops.length === 0 ? (
+                    {!stops || stops.length === 0 ? (
                         <div className="text-center py-12 border-2 border-dashed border-slate-200 rounded-xl">
                             <MapPin className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                             <p className="text-slate-500">No stops yet</p>
@@ -616,65 +625,38 @@ const TripEdit = () => {
 
                         <div className="space-y-4">
                             {/* City Search */}
-                            <div className="relative">
-                                <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                                    City *
-                                </label>
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                                    <input
-                                        type="text"
-                                        placeholder="Search cities..."
-                                        value={citySearch}
-                                        onChange={(e) => {
-                                            setCitySearch(e.target.value);
-                                            setNewStop({ ...newStop, city_name: e.target.value, city_id: null });
-                                        }}
-                                        className="input-field pl-10"
-                                    />
-                                </div>
-                                {cities.length > 0 && (
-                                    <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-auto">
-                                        {cities.map((city) => (
-                                            <button
-                                                key={city.id}
-                                                onClick={() => {
-                                                    setNewStop({ ...newStop, city_name: city.name, city_id: city.id });
-                                                    setCitySearch(city.name);
-                                                    setCities([]);
-                                                }}
-                                                className="w-full text-left px-4 py-3 hover:bg-slate-50 border-b border-slate-100 last:border-0"
-                                            >
-                                                <p className="font-medium text-slate-900">{city.name}</p>
-                                                <p className="text-sm text-slate-500">{city.country} • ~${city.avg_daily_cost}/day</p>
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
+                            <CityAutocomplete
+                                label="City"
+                                value={newStop.city_name}
+                                onChange={(val) => setNewStop({ ...newStop, city_name: val, city_id: null })}
+                                onSelect={(city) => setNewStop({
+                                    ...newStop,
+                                    city_name: city.name,
+                                    city_id: city.id > 0 ? city.id : null
+                                })}
+                                required
+                            />
 
                             {/* Dates */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Start Date *</label>
-                                    <input
-                                        type="date"
+                                    <CustomDatePicker
+                                        label="Start Date *"
+                                        name="start_date"
                                         value={newStop.start_date}
                                         onChange={(e) => setNewStop({ ...newStop, start_date: e.target.value })}
                                         min={trip.start_date}
                                         max={trip.end_date}
-                                        className="input-field"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1.5">End Date *</label>
-                                    <input
-                                        type="date"
+                                    <CustomDatePicker
+                                        label="End Date *"
+                                        name="end_date"
                                         value={newStop.end_date}
                                         onChange={(e) => setNewStop({ ...newStop, end_date: e.target.value })}
                                         min={newStop.start_date || trip.start_date}
                                         max={trip.end_date}
-                                        className="input-field"
                                     />
                                 </div>
                             </div>
@@ -690,123 +672,113 @@ const TripEdit = () => {
                                     placeholder="Optional notes..."
                                 />
                             </div>
-                        </div>
 
-                        <div className="flex gap-3 mt-6">
-                            <Button variant="secondary" onClick={() => setShowAddStop(false)} className="flex-1">
-                                Cancel
-                            </Button>
-                            <Button
-                                onClick={handleAddStop}
-                                disabled={!newStop.city_name || !newStop.start_date || !newStop.end_date}
-                                className="flex-1"
-                            >
-                                Add Stop
-                            </Button>
+                            <div className="flex gap-3 mt-6">
+                                <Button variant="secondary" onClick={() => setShowAddStop(false)} className="flex-1">
+                                    Cancel
+                                </Button>
+                                <Button
+                                    onClick={handleAddStop}
+                                    disabled={!newStop.city_name || !newStop.start_date || !newStop.end_date}
+                                    className="flex-1"
+                                >
+                                    Add Stop
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 </div>
             )}
 
             {/* Add Activity Modal */}
-            {showAddActivity && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-md p-6 animate-fade-in max-h-[90vh] overflow-auto">
-                        <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-lg font-semibold">Add Activity</h3>
-                            <button
-                                onClick={() => setShowAddActivity(null)}
-                                className="p-2 hover:bg-slate-100 rounded-lg"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-
-                        {/* Suggested Activities */}
-                        {activities.length > 0 && (
-                            <div className="mb-6">
-                                <p className="text-sm font-medium text-slate-700 mb-2">Suggested Activities</p>
-                                <div className="space-y-2 max-h-40 overflow-auto">
-                                    {activities.slice(0, 5).map((activity) => (
-                                        <button
-                                            key={activity.id}
-                                            onClick={() => setNewActivity({
-                                                ...newActivity,
-                                                activity_name: activity.name,
-                                                custom_cost: String(activity.estimated_cost || ''),
-                                            })}
-                                            className="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-primary-300 hover:bg-primary-50 transition-colors"
-                                        >
-                                            <p className="font-medium text-slate-900">{activity.name}</p>
-                                            <p className="text-xs text-slate-500">
-                                                {activity.category} • ${activity.estimated_cost} • {activity.duration}min
-                                            </p>
-                                        </button>
-                                    ))}
-                                </div>
+            {
+                showAddActivity && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-2xl w-full max-w-md p-6 animate-fade-in max-h-[90vh] overflow-auto">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-lg font-semibold">Add Activity</h3>
+                                <button
+                                    onClick={() => setShowAddActivity(null)}
+                                    className="p-2 hover:bg-slate-100 rounded-lg"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
                             </div>
-                        )}
 
-                        <div className="space-y-4">
-                            <Input
-                                label="Activity Name *"
-                                value={newActivity.activity_name}
-                                onChange={(e) => setNewActivity({ ...newActivity, activity_name: e.target.value })}
-                                placeholder="e.g., Visit Eiffel Tower"
-                            />
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Date</label>
-                                    {(() => {
-                                        const currentStop = stops.find(s => s.id === showAddActivity);
-                                        return (
-                                            <input
-                                                type="date"
-                                                value={newActivity.scheduled_date}
-                                                onChange={(e) => setNewActivity({ ...newActivity, scheduled_date: e.target.value })}
-                                                min={currentStop?.start_date}
-                                                max={currentStop?.end_date}
-                                                className="input-field"
-                                            />
-                                        );
-                                    })()}
+                            {/* Suggested Activities */}
+                            {activities.length > 0 && (
+                                <div className="mb-6">
+                                    <p className="text-sm font-medium text-slate-700 mb-2">Suggested Activities</p>
+                                    <div className="space-y-2 max-h-40 overflow-auto">
+                                        {activities.slice(0, 5).map((activity) => (
+                                            <button
+                                                key={activity.id}
+                                                onClick={() => setNewActivity({
+                                                    ...newActivity,
+                                                    activity_name: activity.name,
+                                                    custom_cost: String(activity.estimated_cost || ''),
+                                                })}
+                                                className="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-primary-300 hover:bg-primary-50 transition-colors"
+                                            >
+                                                <p className="font-medium text-slate-900">{activity.name}</p>
+                                                <p className="text-xs text-slate-500">
+                                                    {activity.category} • ${activity.estimated_cost} • {activity.duration}min
+                                                </p>
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Time</label>
-                                    <input
+                            )}
+
+                            {/* Form */}
+                            <div className="space-y-4">
+                                <Input
+                                    label="Activity Name"
+                                    value={newActivity.activity_name}
+                                    onChange={(e) => setNewActivity({ ...newActivity, activity_name: e.target.value })}
+                                />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <Input
+                                        label="Date"
+                                        type="date"
+                                        value={newActivity.scheduled_date}
+                                        onChange={(e) => setNewActivity({ ...newActivity, scheduled_date: e.target.value })}
+                                    />
+                                    <Input
+                                        label="Time"
                                         type="time"
                                         value={newActivity.scheduled_time}
                                         onChange={(e) => setNewActivity({ ...newActivity, scheduled_time: e.target.value })}
-                                        className="input-field"
                                     />
                                 </div>
+                                <Input
+                                    label="Cost ($)"
+                                    type="number"
+                                    value={newActivity.custom_cost}
+                                    onChange={(e) => setNewActivity({ ...newActivity, custom_cost: e.target.value })}
+                                />
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Notes</label>
+                                    <textarea
+                                        value={newActivity.notes}
+                                        onChange={(e) => setNewActivity({ ...newActivity, notes: e.target.value })}
+                                        rows={2}
+                                        className="input-field resize-none"
+                                        placeholder="Optional notes..."
+                                    />
+                                </div>
+                                <Button
+                                    onClick={handleAddActivity}
+                                    className="w-full mt-4"
+                                    disabled={!newActivity.activity_name}
+                                >
+                                    Add Activity
+                                </Button>
                             </div>
-
-                            <Input
-                                label="Cost ($)"
-                                type="number"
-                                value={newActivity.custom_cost}
-                                onChange={(e) => setNewActivity({ ...newActivity, custom_cost: e.target.value })}
-                                placeholder="0.00"
-                            />
-                        </div>
-
-                        <div className="flex gap-3 mt-6">
-                            <Button variant="secondary" onClick={() => setShowAddActivity(null)} className="flex-1">
-                                Cancel
-                            </Button>
-                            <Button
-                                onClick={handleAddActivity}
-                                disabled={!newActivity.activity_name}
-                                className="flex-1"
-                            >
-                                Add Activity
-                            </Button>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
         </div>
     );
 };

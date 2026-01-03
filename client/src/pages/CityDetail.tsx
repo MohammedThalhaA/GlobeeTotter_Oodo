@@ -4,15 +4,19 @@ import { citiesAPI } from '../services/api';
 import {
     MapPin,
     Star,
-    Calendar,
-    ChevronLeft,
     Heart,
-    CheckCircle2,
+    ChevronLeft,
     Bus,
-    Home
+    Utensils,
+    Camera,
+    Trees,
+    Landmark,
+    Wallet,
+    Clock,
+    Map,
+    Plane
 } from 'lucide-react';
 import { Skeleton } from '../components/Skeleton';
-import Button from '../components/Button';
 import type { City } from '../types';
 
 const CityDetail = () => {
@@ -151,38 +155,44 @@ const CityDetail = () => {
                         </div>
                     </div>
 
-                    {/* Tour Guides */}
-                    <div>
-                        <h3 className="font-bold text-slate-900 mb-4">Tour Guides</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {[
-                                { name: 'Esther Howard', reviews: '80 reviews', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop' },
-                                { name: 'Floyd Miles', reviews: '60 reviews', img: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop' }
-                            ].map((guide, i) => (
-                                <div key={i} className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl">
-                                    <img src={guide.img} alt={guide.name} className="w-12 h-12 rounded-full object-cover" />
-                                    <div>
-                                        <h4 className="font-bold text-slate-900 text-sm">{guide.name}</h4>
-                                        <div className="flex items-center gap-1 text-xs text-slate-500">
-                                            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                            5.0 ({guide.reviews})
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
+                    {/* Trip Insights - Replaces Tour Guides & Booking */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                            <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center mb-3">
+                                <Wallet className="w-5 h-5 text-green-600" />
+                            </div>
+                            <h3 className="font-bold text-slate-900 text-sm mb-1">Estimated Budget</h3>
+                            <p className="text-slate-500 text-xs">Based on average traveler spend</p>
+                            <p className="text-lg font-bold text-slate-900 mt-2">
+                                ${city.avg_daily_cost ? Math.round(city.avg_daily_cost * 1.5) : 150} <span className="text-xs font-normal text-slate-400">/ day</span>
+                            </p>
+                        </div>
+                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                            <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center mb-3">
+                                <Clock className="w-5 h-5 text-blue-600" />
+                            </div>
+                            <h3 className="font-bold text-slate-900 text-sm mb-1">Suggested Duration</h3>
+                            <p className="text-slate-500 text-xs">Ideal time to explore</p>
+                            <p className="text-lg font-bold text-slate-900 mt-2">
+                                {Math.floor(Math.random() * 3) + 3} - {Math.floor(Math.random() * 3) + 5} Days
+                            </p>
+                        </div>
+                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                            <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center mb-3">
+                                <Map className="w-5 h-5 text-purple-600" />
+                            </div>
+                            <h3 className="font-bold text-slate-900 text-sm mb-1">Things to Do</h3>
+                            <p className="text-slate-500 text-xs">Top rated activities</p>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                                {['Sightseeing', 'Food Tour', 'Hiking'].sort(() => 0.5 - Math.random()).slice(0, 2).map(act => (
+                                    <span key={act} className="text-xs font-semibold bg-white border border-slate-200 px-2 py-1 rounded-lg text-slate-600">
+                                        {act}
+                                    </span>
+                                ))}
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                {/* Sticky Booking Bar */}
-                <div className="sticky bottom-4 bg-white p-4 rounded-2xl shadow-lg border border-slate-100 flex items-center justify-between gap-4 z-20">
-                    <div className="flex items-center gap-3 bg-slate-50 px-4 py-3 rounded-xl flex-1">
-                        <Calendar className="w-5 h-5 text-slate-400" />
-                        <span className="text-sm font-medium text-slate-600">20 December - 27 December</span>
-                    </div>
-                    <Button icon={<CheckCircle2 className="w-5 h-5" />} className="px-8 py-3 rounded-xl shadow-lg shadow-primary-200">
-                        Book Now
-                    </Button>
                 </div>
             </div>
 
@@ -213,11 +223,11 @@ const CityDetail = () => {
                                         <div className="flex items-center gap-1.5 bg-yellow-400/10 px-2 py-0.5 rounded-lg">
                                             <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
                                             <span className="text-xs font-bold text-slate-700">
-                                                {place.popularity_score > 0 ? (place.popularity_score / 20).toFixed(1) : 'New'}
+                                                {(place.popularity_score || 0) > 0 ? ((place.popularity_score || 0) / 20).toFixed(1) : 'New'}
                                             </span>
                                         </div>
                                         <p className="text-sm font-bold text-primary-600">
-                                            ${Math.round(place.avg_daily_cost)}<span className="text-[10px] font-normal text-slate-400">/day</span>
+                                            ${Math.round(place.avg_daily_cost || 0)}<span className="text-[10px] font-normal text-slate-400">/day</span>
                                         </p>
                                     </div>
                                 </div>
@@ -227,26 +237,35 @@ const CityDetail = () => {
                 </div>
 
                 <div className="bg-white p-6 rounded-3xl shadow-card">
-                    <h3 className="font-bold text-slate-900 mb-6">Nearby Places</h3>
-                    <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center">
-                                <Home className="w-5 h-5 text-red-500" />
-                            </div>
-                            <div>
-                                <p className="font-bold text-slate-900 text-sm">School</p>
-                                <p className="text-xs text-slate-400">200m away</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center">
-                                <Bus className="w-5 h-5 text-red-500" />
-                            </div>
-                            <div>
-                                <p className="font-bold text-slate-900 text-sm">Bus Stand</p>
-                                <p className="text-xs text-slate-400">50m away</p>
-                            </div>
-                        </div>
+                    <h3 className="font-bold text-slate-900 mb-6">Nearby Facilities</h3>
+                    <div className="space-y-4">
+                        {/* Dynamic Random Nearby Places */}
+                        {(() => {
+                            const facilities = [
+                                { name: 'City Center', icon: <Landmark className="w-4 h-4 text-blue-500" />, bg: 'bg-blue-50' },
+                                { name: 'Public Garden', icon: <Trees className="w-4 h-4 text-green-500" />, bg: 'bg-green-50' },
+                                { name: 'Food Court', icon: <Utensils className="w-4 h-4 text-orange-500" />, bg: 'bg-orange-50' },
+                                { name: 'Bus Station', icon: <Bus className="w-4 h-4 text-red-500" />, bg: 'bg-red-50' },
+                                { name: 'Museum', icon: <Camera className="w-4 h-4 text-purple-500" />, bg: 'bg-purple-50' },
+                                { name: 'Airport', icon: <Plane className="w-4 h-4 text-sky-500" />, bg: 'bg-sky-50' },
+                            ];
+                            // Shuffle and pick 3-4 random
+                            const randomFacilities = [...facilities].sort(() => 0.5 - Math.random()).slice(0, 4);
+
+                            return randomFacilities.map((fac, idx) => (
+                                <div key={idx} className="flex items-center justify-between group cursor-pointer hover:bg-slate-50 p-2 rounded-xl transition-colors">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-10 h-10 ${fac.bg} rounded-xl flex items-center justify-center`}>
+                                            {fac.icon}
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-slate-900 text-sm group-hover:text-primary-600 transition-colors">{fac.name}</p>
+                                            <p className="text-xs text-slate-400">{(Math.random() * 2 + 0.1).toFixed(1)}km away</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ));
+                        })()}
                     </div>
                 </div>
             </div>

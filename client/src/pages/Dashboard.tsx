@@ -1,25 +1,31 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { tripsAPI, citiesAPI } from '../services/api';
+import { formatCurrency } from '../utils/currency';
+import TravelWidgets from '../components/TravelWidgets';
 import {
     ChevronRight,
+    Calendar,
+    MapPin,
+    Heart,
+    Map as MapIcon,
+    History,
+    Filter,
+    Plus,
+    Star,
     Plane,
     Bus,
     Ship,
     Car,
-    Plus,
-    Filter,
-    ArrowUpRight,
-    Calendar,
-    MapPin,
-    Star,
-    Heart
+    ArrowUpRight
 } from 'lucide-react';
 import { DashboardSkeleton } from '../components/Skeleton';
 import type { City } from '../types';
+import { useAuth } from '../context/AuthContext';
 
 const Dashboard = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [loading, setLoading] = useState(true);
     const [upcomingTrips, setUpcomingTrips] = useState<any[]>([]);
     const [popularCities, setPopularCities] = useState<City[]>([]);
@@ -84,7 +90,7 @@ const Dashboard = () => {
                                             </p>
                                         </div>
                                         <span className="text-primary-600 font-bold bg-primary-50 px-3 py-1 rounded-full text-sm">
-                                            ${Math.round(2000)} {/* Placeholder budget */}
+                                            {formatCurrency(trip.budget || 0, user?.currency)}
                                         </span>
                                     </div>
 
@@ -113,16 +119,6 @@ const Dashboard = () => {
                                                 }}
                                             />
                                         </div>
-                                        <div className="flex-1 overflow-hidden rounded-xl h-24">
-                                            <img
-                                                src={`https://source.unsplash.com/random/400x300/?${(trip.title || 'city').split(' ')[0]},city`}
-                                                alt="Trip"
-                                                className="w-full h-full object-cover"
-                                                onError={(e) => {
-                                                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=300&fit=crop';
-                                                }}
-                                            />
-                                        </div>
                                         <div className="w-24 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 font-medium text-xs cursor-pointer hover:bg-slate-200 transition-colors" onClick={() => navigate(`/trips/${trip.id}`)}>
                                             + View
                                         </div>
@@ -139,31 +135,37 @@ const Dashboard = () => {
                     </div>
                 </div>
 
-                {/* 2. Top Tour Agencies + Transportation (Middle & Right) */}
-                <div className="col-span-12 lg:col-span-12 xl:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-8">
-
-                    {/* Top 3 Tour Agencies */}
-                    <div className="bg-white p-6 rounded-3xl shadow-card h-fit">
-                        <div className="flex items-center justify-between mb-6">
-                            <h3 className="font-bold text-slate-900">Top 3 Tour Agencies</h3>
+                {/* 2. Right Side - Widgets & Recent Trips */}
+                <div className="col-span-12 xl:col-span-7 space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {/* Travel Toolkit Widget */}
+                        <div className="h-[320px]">
+                            <TravelWidgets nextTrip={upcomingTrips[0]} userCurrency={user?.currency} />
                         </div>
-                        <div className="space-y-4">
-                            {[
-                                { name: 'Abz Tour Ltd.', loc: 'Dhaka, Bangladesh', img: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=100&h=100&fit=crop' },
-                                { name: 'Tourp', loc: 'New York, USA', img: 'https://images.unsplash.com/photo-1571896349842-68c6d31d157a?w=100&h=100&fit=crop' },
-                                { name: 'ManaTrip', loc: 'London, England', img: 'https://images.unsplash.com/photo-1549144511-3005a2b13824?w=100&h=100&fit=crop' }
-                            ].map((agency, i) => (
-                                <div key={i} className="flex items-center gap-4 group cursor-pointer">
-                                    <img src={agency.img} alt={agency.name} className="w-12 h-12 rounded-xl object-cover" />
-                                    <div className="flex-1">
-                                        <h4 className="font-bold text-slate-900 text-sm">{agency.name}</h4>
-                                        <p className="text-xs text-slate-400">{agency.loc}</p>
+
+                        {/* Top 3 Tour Agencies */}
+                        <div className="bg-white p-6 rounded-3xl shadow-card h-fit">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="font-bold text-slate-900">Top 3 Tour Agencies</h3>
+                            </div>
+                            <div className="space-y-4">
+                                {[
+                                    { name: 'Abz Tour Ltd.', loc: 'Dhaka, Bangladesh', img: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=100&h=100&fit=crop' },
+                                    { name: 'Tourp', loc: 'New York, USA', img: 'https://images.unsplash.com/photo-1571896349842-68c6d31d157a?w=100&h=100&fit=crop' },
+                                    { name: 'ManaTrip', loc: 'London, England', img: 'https://images.unsplash.com/photo-1549144511-3005a2b13824?w=100&h=100&fit=crop' }
+                                ].map((agency, i) => (
+                                    <div key={i} className="flex items-center gap-4 group cursor-pointer">
+                                        <img src={agency.img} alt={agency.name} className="w-12 h-12 rounded-xl object-cover" />
+                                        <div className="flex-1">
+                                            <h4 className="font-bold text-slate-900 text-sm">{agency.name}</h4>
+                                            <p className="text-xs text-slate-400">{agency.loc}</p>
+                                        </div>
+                                        <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-primary-600 transition-colors">
+                                            <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-white" />
+                                        </div>
                                     </div>
-                                    <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-primary-600 transition-colors">
-                                        <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-white" />
-                                    </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
                     </div>
 
