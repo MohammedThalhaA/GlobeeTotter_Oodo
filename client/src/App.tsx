@@ -17,6 +17,7 @@ import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminLogin from './pages/AdminLogin';
 import ForgotPassword from './pages/ForgotPassword';
+import SidebarLayout from './layouts/SidebarLayout';
 import { Loader2 } from 'lucide-react';
 
 // Protected Route wrapper
@@ -57,7 +58,16 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// Layout with Navbar
+// Sidebar Layout for authenticated routes
+const AuthenticatedLayout = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <SidebarLayout>
+      {children}
+    </SidebarLayout>
+  );
+};
+
+// Layout with Navbar (legacy/public)
 const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="min-h-screen bg-slate-50">
@@ -118,9 +128,9 @@ function AppRoutes() {
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <Layout>
+            <AuthenticatedLayout>
               <Dashboard />
-            </Layout>
+            </AuthenticatedLayout>
           </ProtectedRoute>
         }
       />
@@ -128,9 +138,9 @@ function AppRoutes() {
         path="/trips"
         element={
           <ProtectedRoute>
-            <Layout>
+            <AuthenticatedLayout>
               <MyTrips />
-            </Layout>
+            </AuthenticatedLayout>
           </ProtectedRoute>
         }
       />
@@ -168,9 +178,9 @@ function AppRoutes() {
         path="/explore"
         element={
           <ProtectedRoute>
-            <Layout>
+            <AuthenticatedLayout>
               <CitySearch />
-            </Layout>
+            </AuthenticatedLayout>
           </ProtectedRoute>
         }
       />
@@ -178,9 +188,9 @@ function AppRoutes() {
         path="/cities/:id"
         element={
           <ProtectedRoute>
-            <Layout>
+            <AuthenticatedLayout>
               <CityDetail />
-            </Layout>
+            </AuthenticatedLayout>
           </ProtectedRoute>
         }
       />
@@ -208,9 +218,9 @@ function AppRoutes() {
         path="/profile"
         element={
           <ProtectedRoute>
-            <Layout>
+            <AuthenticatedLayout>
               <Profile />
-            </Layout>
+            </AuthenticatedLayout>
           </ProtectedRoute>
         }
       />
