@@ -119,8 +119,16 @@ const Dashboard = () => {
                 ]);
 
                 if (tripsRes.data.success) {
-                    // Sort by newest and take first 2
-                    setUpcomingTrips(tripsRes.data.data.slice(0, 2));
+                    // Filter for upcoming trips (start_date >= today) and sort by start_date (soonest first)
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0); // Reset to start of day for accurate comparison
+
+                    const upcoming = tripsRes.data.data
+                        .filter((trip: any) => new Date(trip.start_date) >= today)
+                        .sort((a: any, b: any) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime())
+                        .slice(0, 4); // Show up to 4 upcoming trips
+
+                    setUpcomingTrips(upcoming);
                 }
 
                 if (citiesRes.data.success) {

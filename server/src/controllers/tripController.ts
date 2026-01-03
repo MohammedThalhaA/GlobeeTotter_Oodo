@@ -280,9 +280,9 @@ export const getRecentTrips = async (
             `SELECT t.*, COUNT(DISTINCT ts.id) as stop_count
        FROM trips t
        LEFT JOIN trip_stops ts ON t.id = ts.trip_id
-       WHERE t.user_id = $1
+       WHERE t.user_id = $1 AND t.start_date >= CURRENT_DATE
        GROUP BY t.id
-       ORDER BY t.created_at DESC
+       ORDER BY t.start_date ASC
        LIMIT 4`,
             [req.user.id]
         );
