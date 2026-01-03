@@ -3,6 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { tripsAPI, stopsAPI, citiesAPI, activitiesAPI } from '../services/api';
 import Button from '../components/Button';
 import Input from '../components/Input';
+import UnsavedChangesModal from '../components/UnsavedChangesModal';
+import { useUnsavedChanges } from '../hooks/useUnsavedChanges';
+import { useToast } from '../context/ToastContext';
 import {
     ArrowLeft,
     Save,
@@ -75,6 +78,11 @@ const TripEdit = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [expandedStop, setExpandedStop] = useState<number | null>(null);
+
+    // Unsaved changes protection
+    const { isDirty, setIsDirty, showModal, confirmNavigation, cancelNavigation, markAsSaved } = useUnsavedChanges();
+    const { showToast } = useToast();
+    void isDirty; // Used implicitly by the hook
 
     // Modal states
     const [showAddStop, setShowAddStop] = useState(false);
@@ -166,11 +174,26 @@ const TripEdit = () => {
                 end_date: trip.end_date,
                 is_public: trip.is_public,
             });
+            markAsSaved();
+            showToast('success', 'Trip saved successfully!');
             navigate(`/trips/${tripId}`);
         } catch (error) {
             console.error('Failed to save trip:', error);
+            showToast('danger', 'Failed to save trip. Please try again.');
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleCancel = () => {
+        markAsSaved();
+        navigate(-1);
+    };
+
+    const handleFieldChange = <K extends keyof Trip>(field: K, value: Trip[K]) => {
+        if (trip) {
+            setTrip({ ...trip, [field]: value });
+            setIsDirty(true);
         }
     };
 
@@ -315,14 +338,21 @@ const TripEdit = () => {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 pb-20">
-            {/* Header */}
-            <div className="bg-white border-b border-slate-200">
-                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="min-h-screen bg-slate-50 pb-20 -mx-8 -mt-4">
+            {/* Unsaved Changes Modal */}
+            <UnsavedChangesModal
+                isOpen={showModal}
+                onStay={cancelNavigation}
+                onLeave={confirmNavigation}
+            />
+
+            {/* Header - sticky below TopBar */}
+            <div className="bg-white border-b border-slate-200 sticky top-20 z-30">
+                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <button
-                                onClick={() => navigate(-1)}
+                                onClick={handleCancel}
                                 className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
                             >
                                 <ArrowLeft className="w-5 h-5" />
@@ -332,9 +362,14 @@ const TripEdit = () => {
                                 <p className="text-sm text-slate-500">{trip.title}</p>
                             </div>
                         </div>
-                        <Button onClick={handleSaveTrip} loading={saving} icon={<Save className="w-4 h-4" />}>
-                            Save Changes
-                        </Button>
+                        <div className="flex items-center gap-3">
+                            <Button variant="secondary" onClick={handleCancel}>
+                                Cancel
+                            </Button>
+                            <Button onClick={handleSaveTrip} loading={saving} icon={<Save className="w-4 h-4" />}>
+                                Save Changes
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -347,7 +382,7 @@ const TripEdit = () => {
                         <Input
                             label="Trip Name"
                             value={trip.title}
-                            onChange={(e) => setTrip({ ...trip, title: e.target.value })}
+                            onChange={(e) => handleFieldChange('title', e.target.value)}
                         />
                         <div className="grid grid-cols-2 gap-4">
                             <div>
@@ -355,7 +390,7 @@ const TripEdit = () => {
                                 <input
                                     type="date"
                                     value={trip.start_date}
-                                    onChange={(e) => setTrip({ ...trip, start_date: e.target.value })}
+                                    onChange={(e) => handleFieldChange('start_date', e.target.value)}
                                     className="input-field"
                                 />
                             </div>
@@ -364,7 +399,7 @@ const TripEdit = () => {
                                 <input
                                     type="date"
                                     value={trip.end_date}
-                                    onChange={(e) => setTrip({ ...trip, end_date: e.target.value })}
+                                    onChange={(e) => handleFieldChange('end_date', e.target.value)}
                                     className="input-field"
                                 />
                             </div>
@@ -374,7 +409,7 @@ const TripEdit = () => {
                         <label className="block text-sm font-medium text-slate-700 mb-1.5">Description</label>
                         <textarea
                             value={trip.description || ''}
-                            onChange={(e) => setTrip({ ...trip, description: e.target.value })}
+                            onChange={(e) => handleFieldChange('description', e.target.value)}
                             rows={3}
                             className="input-field resize-none"
                             placeholder="Describe your trip..."
