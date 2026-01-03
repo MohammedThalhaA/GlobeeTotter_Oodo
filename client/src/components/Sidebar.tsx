@@ -16,7 +16,7 @@ const Sidebar = () => {
 
     const menuItems = [
         { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-        { path: '/trips', label: 'Trip', icon: Map, subItems: ['Recent Trip'] },
+        { path: '/trips', label: 'Trip', icon: Map },
         { path: '/favorites', label: 'Wishlist', icon: Heart },
         { path: '/explore', label: 'Explore', icon: Compass },
 
@@ -65,19 +65,7 @@ const Sidebar = () => {
                             <span>{item.label}</span>
                         </Link>
 
-                        {/* Submenu (Visual only for now based on mockup) */}
-                        {item.subItems && isActive(item.path) && (
-                            <div className="pl-12 mt-1 space-y-1">
-                                {item.subItems.map((sub) => (
-                                    <div key={sub} className="relative py-1 text-sm text-slate-400 hover:text-primary-600 cursor-pointer transition-colors">
-                                        {/* Tree line connector */}
-                                        <div className="absolute -left-6 top-1/2 w-4 h-[1px] bg-slate-200"></div>
-                                        <div className="absolute -left-6 -top-4 bottom-1/2 w-[1px] bg-slate-200"></div>
-                                        {sub}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+
                     </div>
                 ))}
             </nav>

@@ -35,12 +35,12 @@ interface Trip {
 }
 
 const COLORS = [
-    'bg-blue-100 text-blue-800 border-blue-200',
-    'bg-pink-100 text-pink-800 border-pink-200',
-    'bg-green-100 text-green-800 border-green-200',
-    'bg-yellow-100 text-yellow-800 border-yellow-200',
-    'bg-purple-100 text-purple-800 border-purple-200',
-    'bg-orange-100 text-orange-800 border-orange-200',
+    'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200',
+    'bg-pink-100 text-pink-800 border-pink-200 hover:bg-pink-200',
+    'bg-green-100 text-green-800 border-green-200 hover:bg-green-200',
+    'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-200',
+    'bg-purple-100 text-purple-800 border-purple-200 hover:bg-purple-200',
+    'bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200',
 ];
 
 const TripCalendar = () => {
@@ -185,29 +185,49 @@ const TripCalendar = () => {
 
     return (
         <div className="min-h-screen bg-slate-50 pb-12">
-            {/* Header */}
-            <div className="bg-white border-b border-slate-200">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => navigate(-1)}
-                            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-                        >
-                            <ArrowLeft className="w-5 h-5" />
-                        </button>
-                        <div>
-                            <p className="text-slate-500 text-sm">Trip Calendar</p>
-                            <h1 className="text-xl font-bold text-slate-900">{trip.title}</h1>
+            {/* Header - Sticky */}
+            <div className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm backdrop-blur-md bg-white/90">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                    <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={() => navigate(-1)}
+                                className="p-2 hover:bg-slate-100 rounded-lg transition-colors group"
+                            >
+                                <ArrowLeft className="w-5 h-5 text-slate-500 group-hover:text-primary-600 transition-colors" />
+                            </button>
+                            <div>
+                                <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">Trip Calendar</p>
+                                <h1 className="text-xl font-bold text-slate-900">{trip.title}</h1>
+                            </div>
+                        </div>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={prevMonth}
+                                className="p-2 hover:bg-slate-100 rounded-full transition-colors border border-slate-200 hover:border-primary-200 hover:text-primary-600"
+                            >
+                                <ChevronLeft className="w-5 h-5" />
+                            </button>
+                            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 min-w-[160px] justify-center bg-slate-100 px-4 py-1.5 rounded-full">
+                                <CalendarIcon className="w-4 h-4 text-primary-500" />
+                                {monthName}
+                            </h2>
+                            <button
+                                onClick={nextMonth}
+                                className="p-2 hover:bg-slate-100 rounded-full transition-colors border border-slate-200 hover:border-primary-200 hover:text-primary-600"
+                            >
+                                <ChevronRight className="w-5 h-5" />
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                     {/* Legend */}
                     <div className="lg:col-span-1">
-                        <div className="bg-white rounded-2xl shadow-card p-6 sticky top-24">
+                        <div className="bg-white rounded-2xl shadow-card p-6 sticky top-28 transition-transform duration-500 hover:shadow-lg">
                             <h2 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
                                 <MapPin className="w-5 h-5 text-primary-500" />
                                 Destinations
@@ -215,12 +235,12 @@ const TripCalendar = () => {
                             {stops.length === 0 ? (
                                 <p className="text-slate-400 text-sm">No stops added</p>
                             ) : (
-                                <div className="space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+                                <div className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
                                     {stops.map((stop) => (
-                                        <div key={stop.id} className="flex items-start gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors">
-                                            <div className={`w-4 h-4 rounded mt-1.5 ${cityColors.get(stop.city_name)?.split(' ')[0]}`} />
+                                        <div key={stop.id} className="group flex items-start gap-3 p-3 hover:bg-slate-50 rounded-xl transition-all duration-300 border border-transparent hover:border-slate-100 shadow-sm hover:shadow-md cursor-default">
+                                            <div className={`w-3 h-3 rounded-full mt-1.5 shadow-sm ${cityColors.get(stop.city_name)?.split(' ')[0].replace('bg-', 'bg-')}`} />
                                             <div>
-                                                <p className="font-bold text-slate-800 text-sm">{stop.city_name}</p>
+                                                <p className="font-bold text-slate-800 text-sm group-hover:text-primary-600 transition-colors">{stop.city_name}</p>
                                                 <p className="text-xs font-medium text-slate-500 mt-1 flex items-center gap-1">
                                                     <CalendarIcon className="w-3 h-3" />
                                                     {new Date(stop.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} -{' '}
@@ -232,16 +252,16 @@ const TripCalendar = () => {
                                 </div>
                             )}
 
-                            <hr className="my-4 border-slate-100" />
+                            <hr className="my-6 border-slate-100" />
 
                             <div className="space-y-3">
                                 <Link to={`/trips/${tripId}/edit`} className="block w-full">
-                                    <Button variant="secondary" className="w-full flex items-center justify-center gap-2">
+                                    <Button variant="secondary" className="w-full flex items-center justify-center gap-2 group hover:bg-primary-50 hover:text-primary-700 hover:border-primary-200">
                                         Edit Itinerary
                                     </Button>
                                 </Link>
                                 <Link to={`/trips/${tripId}/budget`} className="block w-full">
-                                    <Button variant="secondary" className="w-full flex items-center justify-center gap-2">
+                                    <Button variant="secondary" className="w-full flex items-center justify-center gap-2 group hover:bg-primary-50 hover:text-primary-700 hover:border-primary-200">
                                         View Budget
                                     </Button>
                                 </Link>
@@ -251,41 +271,21 @@ const TripCalendar = () => {
 
                     {/* Calendar */}
                     <div className="lg:col-span-3">
-                        <div className="bg-white rounded-2xl shadow-card p-6">
-                            {/* Month Navigation */}
-                            <div className="flex items-center justify-between mb-6">
-                                <button
-                                    onClick={prevMonth}
-                                    className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-                                >
-                                    <ChevronLeft className="w-5 h-5" />
-                                </button>
-                                <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                                    <CalendarIcon className="w-5 h-5 text-primary-500" />
-                                    {monthName}
-                                </h2>
-                                <button
-                                    onClick={nextMonth}
-                                    className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-                                >
-                                    <ChevronRight className="w-5 h-5" />
-                                </button>
-                            </div>
-
+                        <div className="bg-white rounded-2xl shadow-card p-8 transition-all hover:shadow-xl duration-500">
                             {/* Day Headers */}
-                            <div className="grid grid-cols-7 gap-2 mb-2">
+                            <div className="grid grid-cols-7 gap-4 mb-4 border-b border-slate-100 pb-4">
                                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                                    <div key={day} className="text-center text-sm font-medium text-slate-500 py-2">
+                                    <div key={day} className="text-center text-xs font-bold text-slate-400 uppercase tracking-wider">
                                         {day}
                                     </div>
                                 ))}
                             </div>
 
                             {/* Calendar Grid */}
-                            <div className="grid grid-cols-7 gap-2">
+                            <div className="grid grid-cols-7 gap-4">
                                 {calendarDays.map((day, idx) => {
                                     if (!day) {
-                                        return <div key={`empty-${idx}`} className="aspect-square" />;
+                                        return <div key={`empty-${idx}`} className="aspect-square bg-slate-50/30 rounded-2xl" />;
                                     }
 
                                     const city = getCityForDate(day);
@@ -296,29 +296,47 @@ const TripCalendar = () => {
                                     return (
                                         <div
                                             key={day.toISOString()}
-                                            className={`aspect-square p-1 rounded-xl border-2 transition-all ${inTrip
-                                                ? city
-                                                    ? cityColors.get(city) || 'bg-primary-50 border-primary-200'
-                                                    : 'bg-slate-50 border-slate-200'
-                                                : 'border-transparent'
-                                                } ${today ? 'ring-2 ring-primary-500 ring-offset-2' : ''}`}
+                                            className={`
+                                                aspect-square p-2 rounded-2xl border-2 transition-all duration-300 relative group overflow-hidden
+                                                ${inTrip
+                                                    ? city
+                                                        ? `${cityColors.get(city)} shadow-sm hover:scale-105 hover:shadow-lg hover:z-10`
+                                                        : 'bg-slate-50 border-slate-200'
+                                                    : 'border-transparent hover:bg-slate-50'
+                                                } 
+                                                ${today ? 'ring-4 ring-primary-100 border-primary-500' : ''}
+                                            `}
                                         >
-                                            <div className="h-full flex flex-col">
-                                                <span className={`text-sm font-medium ${inTrip ? 'text-slate-900' : 'text-slate-400'
+                                            <div className="h-full flex flex-col justify-between relative z-10">
+                                                <span className={`text-sm font-bold w-6 h-6 flex items-center justify-center rounded-full ${today ? 'bg-primary-600 text-white' : inTrip ? 'text-slate-800' : 'text-slate-400'
                                                     }`}>
                                                     {day.getDate()}
                                                 </span>
-                                                {city && (
-                                                    <span className="text-xs truncate mt-0.5">{city}</span>
-                                                )}
-                                                {activities.length > 0 && (
-                                                    <div className="mt-auto">
-                                                        <span className="text-xs bg-white/60 px-1 rounded">
-                                                            {activities.length} act.
+
+                                                <div className="space-y-1">
+                                                    {city && (
+                                                        <span className="text-[10px] font-bold uppercase tracking-tight line-clamp-1 opacity-80 group-hover:opacity-100">
+                                                            {city}
                                                         </span>
-                                                    </div>
-                                                )}
+                                                    )}
+                                                    {activities.length > 0 && (
+                                                        <div className="flex -space-x-1 overflow-hidden py-0.5">
+                                                            {activities.slice(0, 3).map((_, i) => (
+                                                                <div key={i} className="w-1.5 h-1.5 rounded-full bg-slate-900/40 ring-1 ring-white" />
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
+
+                                            {/* Hover activity count overlay */}
+                                            {activities.length > 0 && (
+                                                <div className="absolute inset-x-0 bottom-0 p-2 bg-white/90 backdrop-blur-sm translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                                                    <p className="text-[10px] mobile:text-[9px] font-bold text-center text-slate-800">
+                                                        {activities.length} Activities
+                                                    </p>
+                                                </div>
+                                            )}
                                         </div>
                                     );
                                 })}

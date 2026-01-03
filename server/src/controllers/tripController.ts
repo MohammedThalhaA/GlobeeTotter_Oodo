@@ -84,7 +84,21 @@ export const getTrips = async (
             `SELECT t.*, 
               COUNT(DISTINCT ts.id) as stop_count,
               COALESCE(json_agg(DISTINCT jsonb_build_object('city_name', ts.city_name)) 
-                FILTER (WHERE ts.id IS NOT NULL), '[]') as cities
+                FILTER (WHERE ts.id IS NOT NULL), '[]') as cities,
+              (
+                COALESCE((
+                    SELECT SUM(ta.custom_cost)
+                    FROM trip_stops ts_sub
+                    JOIN trip_activities ta ON ts_sub.id = ta.trip_stop_id
+                    WHERE ts_sub.trip_id = t.id
+                ), 0) +
+                COALESCE((
+                    SELECT SUM((ts_sub.end_date - ts_sub.start_date) * COALESCE(c.avg_daily_cost, 0))
+                    FROM trip_stops ts_sub
+                    JOIN cities c ON ts_sub.city_id = c.id
+                    WHERE ts_sub.trip_id = t.id
+                ), 0)
+              ) as budget
        FROM trips t
        LEFT JOIN trip_stops ts ON t.id = ts.trip_id
        WHERE t.user_id = $1
@@ -277,7 +291,24 @@ export const getRecentTrips = async (
         }
 
         const result = await pool.query(
-            `SELECT t.*, COUNT(DISTINCT ts.id) as stop_count
+            `SELECT t.*, 
+       COUNT(DISTINCT ts.id) as stop_count,
+       COALESCE(json_agg(DISTINCT jsonb_build_object('city_name', ts.city_name)) 
+                FILTER (WHERE ts.id IS NOT NULL), '[]') as cities,
+       (
+         COALESCE((
+             SELECT SUM(ta.custom_cost)
+             FROM trip_stops ts_sub
+             JOIN trip_activities ta ON ts_sub.id = ta.trip_stop_id
+             WHERE ts_sub.trip_id = t.id
+         ), 0) +
+         COALESCE((
+             SELECT SUM((ts_sub.end_date - ts_sub.start_date) * COALESCE(c.avg_daily_cost, 0))
+             FROM trip_stops ts_sub
+             JOIN cities c ON ts_sub.city_id = c.id
+             WHERE ts_sub.trip_id = t.id
+         ), 0)
+       ) as budget
        FROM trips t
        LEFT JOIN trip_stops ts ON t.id = ts.trip_id
        WHERE t.user_id = $1 AND t.start_date >= CURRENT_DATE

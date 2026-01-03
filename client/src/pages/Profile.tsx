@@ -379,7 +379,9 @@ const Profile = () => {
                                         {/* Currency */}
                                         <div className="space-y-2">
                                             <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                                                <span className="text-lg">$</span>
+                                                <span className="text-lg font-bold text-slate-900 bg-slate-100 w-8 h-8 rounded-lg flex items-center justify-center">
+                                                    {currencies.find(c => c.code === currency)?.symbol}
+                                                </span>
                                                 Currency
                                             </label>
                                             <select
