@@ -10,14 +10,13 @@ import {
     Plus,
     Filter,
     ArrowUpRight,
-    Loader2,
     Calendar,
     MapPin,
     Star,
     Heart
 } from 'lucide-react';
 import { DashboardSkeleton } from '../components/Skeleton';
-import { City } from '../types';
+import type { City } from '../types';
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -41,7 +40,7 @@ const Dashboard = () => {
                 if (citiesRes.data.success) {
                     // Sort by popularity and take 4
                     setPopularCities(citiesRes.data.data
-                        .sort((a, b) => (b.popularity_score || 0) - (a.popularity_score || 0))
+                        .sort((a: City, b: City) => (b.popularity_score || 0) - (a.popularity_score || 0))
                         .slice(0, 4)
                     );
                 }
@@ -177,8 +176,8 @@ const Dashboard = () => {
                             ].map((item, i) => (
                                 <div key={i} className="flex flex-col items-center gap-2 cursor-pointer group">
                                     <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${item.primary
-                                            ? 'bg-primary-600 text-white shadow-lg shadow-primary-200'
-                                            : 'bg-slate-50 text-slate-400 group-hover:bg-slate-100 group-hover:text-primary-600'
+                                        ? 'bg-primary-600 text-white shadow-lg shadow-primary-200'
+                                        : 'bg-slate-50 text-slate-400 group-hover:bg-slate-100 group-hover:text-primary-600'
                                         }`}>
                                         <item.icon className="w-6 h-6" />
                                     </div>
@@ -243,8 +242,8 @@ const Dashboard = () => {
                         <button
                             key={tab}
                             className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${i === 0
-                                    ? 'bg-primary-600 text-white shadow-lg shadow-primary-200'
-                                    : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                                ? 'bg-primary-600 text-white shadow-lg shadow-primary-200'
+                                : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
                                 }`}
                         >
                             {tab}

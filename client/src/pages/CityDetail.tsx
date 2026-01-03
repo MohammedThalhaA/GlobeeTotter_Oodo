@@ -6,17 +6,14 @@ import {
     Star,
     Calendar,
     ChevronLeft,
-    Share2,
     Heart,
     CheckCircle2,
-    Clock,
-    User,
     Bus,
     Home
 } from 'lucide-react';
 import { Skeleton } from '../components/Skeleton';
 import Button from '../components/Button';
-import { City } from '../types';
+import type { City } from '../types';
 
 const CityDetail = () => {
     const { id } = useParams<{ id: string }>();
@@ -106,8 +103,8 @@ const CityDetail = () => {
                             key={tab}
                             onClick={() => setActiveTab(tab)}
                             className={`px-6 py-2.5 rounded-lg font-semibold text-sm transition-all ${activeTab === tab
-                                    ? 'bg-primary-600 text-white shadow-lg shadow-primary-200'
-                                    : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                                ? 'bg-primary-600 text-white shadow-lg shadow-primary-200'
+                                : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
                                 }`}
                         >
                             {tab}
