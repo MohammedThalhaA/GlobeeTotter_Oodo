@@ -30,7 +30,8 @@ const Navbar = () => {
         { path: '/trips', label: 'My Trips', icon: Map },
         { path: '/explore', label: 'Explore', icon: Compass },
         { path: '/trips/create', label: 'New Trip', icon: PlusCircle },
-        { path: '/admin', label: 'Admin', icon: BarChart3 },
+        // Admin link only for admin users
+        ...(user?.is_admin ? [{ path: '/admin', label: 'Admin', icon: BarChart3 }] : []),
     ];
 
     const isActive = (path: string) => location.pathname === path;

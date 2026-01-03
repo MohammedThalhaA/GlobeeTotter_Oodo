@@ -97,18 +97,18 @@ CREATE INDEX idx_trip_activities_trip_stop_id ON trip_activities(trip_stop_id);
 CREATE INDEX idx_activities_city_id ON activities(city_id);
 CREATE INDEX idx_cities_country ON cities(country);
 
--- Insert some sample cities with Unsplash images
+-- Insert some sample cities with HD Unsplash images
 INSERT INTO cities (name, country, region, avg_daily_cost, popularity_score, description, image_url) VALUES
-('Paris', 'France', 'Europe', 150.00, 95, 'The City of Light, known for Eiffel Tower, Louvre, and romantic ambiance', 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800&q=80'),
-('Tokyo', 'Japan', 'Asia', 120.00, 92, 'A blend of ultramodern and traditional, from neon-lit skyscrapers to historic temples', 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800&q=80'),
-('New York', 'USA', 'North America', 200.00, 94, 'The city that never sleeps, iconic skyline and endless entertainment', 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800&q=80'),
-('Rome', 'Italy', 'Europe', 130.00, 90, 'Ancient history meets vibrant culture in the Eternal City', 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800&q=80'),
-('Barcelona', 'Spain', 'Europe', 110.00, 88, 'Gaudi architecture, beautiful beaches, and Mediterranean vibes', 'https://images.unsplash.com/photo-1583422409516-2895a77efded?w=800&q=80'),
-('Bali', 'Indonesia', 'Asia', 60.00, 85, 'Tropical paradise with temples, rice terraces, and stunning beaches', 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800&q=80'),
-('Dubai', 'UAE', 'Middle East', 180.00, 87, 'Luxury shopping, ultramodern architecture, and desert adventures', 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800&q=80'),
-('Sydney', 'Australia', 'Oceania', 160.00, 86, 'Iconic Opera House, beautiful harbors, and vibrant culture', 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=800&q=80'),
-('London', 'UK', 'Europe', 170.00, 93, 'Historic landmarks, world-class museums, and British charm', 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800&q=80'),
-('Singapore', 'Singapore', 'Asia', 140.00, 89, 'Futuristic city-state with incredible food and Gardens by the Bay', 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=800&q=80');
+('Paris', 'France', 'Europe', 150.00, 95, 'The City of Light, known for Eiffel Tower, Louvre, and romantic ambiance', 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1200&h=800&fit=crop&q=90'),
+('Tokyo', 'Japan', 'Asia', 120.00, 92, 'A blend of ultramodern and traditional, from neon-lit skyscrapers to historic temples', 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=1200&h=800&fit=crop&q=90'),
+('New York', 'USA', 'North America', 200.00, 94, 'The city that never sleeps, iconic skyline and endless entertainment', 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=1200&h=800&fit=crop&q=90'),
+('Rome', 'Italy', 'Europe', 130.00, 90, 'Ancient history meets vibrant culture in the Eternal City', 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=1200&h=800&fit=crop&q=90'),
+('Barcelona', 'Spain', 'Europe', 110.00, 88, 'Gaudi architecture, beautiful beaches, and Mediterranean vibes', 'https://images.unsplash.com/photo-1583422409516-2895a77efded?w=1200&h=800&fit=crop&q=90'),
+('Bali', 'Indonesia', 'Asia', 60.00, 85, 'Tropical paradise with temples, rice terraces, and stunning beaches', 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=1200&h=800&fit=crop&q=90'),
+('Dubai', 'UAE', 'Middle East', 180.00, 87, 'Luxury shopping, ultramodern architecture, and desert adventures', 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1200&h=800&fit=crop&q=90'),
+('Sydney', 'Australia', 'Oceania', 160.00, 86, 'Iconic Opera House, beautiful harbors, and vibrant culture', 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=1200&h=800&fit=crop&q=90'),
+('London', 'UK', 'Europe', 170.00, 93, 'Historic landmarks, world-class museums, and British charm', 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=1200&h=800&fit=crop&q=90'),
+('Singapore', 'Singapore', 'Asia', 140.00, 89, 'Futuristic city-state with incredible food and Gardens by the Bay', 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=1200&h=800&fit=crop&q=90');
 
 -- Insert sample activities for Paris
 INSERT INTO activities (city_id, name, category, estimated_cost, duration, description) VALUES

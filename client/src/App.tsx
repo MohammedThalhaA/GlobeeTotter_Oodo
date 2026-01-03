@@ -16,6 +16,7 @@ import PublicTrip from './pages/PublicTrip';
 import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminLogin from './pages/AdminLogin';
+import ForgotPassword from './pages/ForgotPassword';
 import { Loader2 } from 'lucide-react';
 
 // Protected Route wrapper
@@ -100,6 +101,14 @@ function AppRoutes() {
         element={
           <AuthLayout>
             <AdminLogin />
+          </AuthLayout>
+        }
+      />
+      <Route
+        path="/forgot-password"
+        element={
+          <AuthLayout>
+            <ForgotPassword />
           </AuthLayout>
         }
       />
