@@ -27,7 +27,7 @@ export const useUnsavedChanges = (initialDirty = false): UseUnsavedChangesReturn
         }
     }, [blocker.state]);
 
-    // Handle browser back button and tab close
+    // Handle browser back button and tab close (native browser behavior)
     useEffect(() => {
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
             if (isDirty) {
@@ -43,13 +43,20 @@ export const useUnsavedChanges = (initialDirty = false): UseUnsavedChangesReturn
 
     const confirmNavigation = useCallback(() => {
         setShowModal(false);
+        // Important: set dirty to false BEFORE proceeding, otherwise it might double block
+        // Actually, proceed() will ignore the blocker for this navigation
+        if (blocker.state === 'blocked') {
+            blocker.proceed();
+        }
+        // We also want to reset dirty state since we are leaving
         setIsDirty(false);
-        blocker.proceed?.();
     }, [blocker]);
 
     const cancelNavigation = useCallback(() => {
         setShowModal(false);
-        blocker.reset?.();
+        if (blocker.state === 'blocked') {
+            blocker.reset();
+        }
     }, [blocker]);
 
     const markAsSaved = useCallback(() => {

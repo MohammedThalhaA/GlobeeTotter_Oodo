@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, createRoutesFromElements, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import Login from './pages/Login';
@@ -82,9 +82,10 @@ const AuthLayout = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-function AppRoutes() {
-  return (
-    <Routes>
+// Define Routes
+const router = createBrowserRouter(
+  createRoutesFromElements(
+    <Route>
       {/* Public Routes */}
       <Route
         path="/login"
@@ -266,19 +267,27 @@ function AppRoutes() {
           </div>
         }
       />
-    </Routes>
-  );
-}
+    </Route>
+  ),
+  {
+    future: {
+      v7_startTransition: true,
+      v7_relativeSplatPath: true,
+      v7_fetcherPersist: true,
+      v7_normalizeFormMethod: true,
+      v7_partialHydration: true,
+      v7_skipActionErrorRevalidation: true,
+    }
+  }
+);
 
 function App() {
   return (
-    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <AuthProvider>
-        <ToastProvider>
-          <AppRoutes />
-        </ToastProvider>
-      </AuthProvider>
-    </Router>
+    <AuthProvider>
+      <ToastProvider>
+        <RouterProvider router={router} />
+      </ToastProvider>
+    </AuthProvider>
   );
 }
 
