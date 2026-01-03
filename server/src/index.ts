@@ -11,6 +11,7 @@ import cityRoutes from './routes/cities';
 import stopRoutes from './routes/stops';
 import activityRoutes from './routes/activities';
 import budgetRoutes from './routes/budget';
+import favoritesRoutes from './routes/favorites';
 import adminRoutes from './routes/admin';
 import { errorHandler, notFound } from './middleware/errorHandler';
 import pool from './config/database';
@@ -38,6 +39,7 @@ app.use('/api/trips/:tripId/stops', stopRoutes);
 app.use('/api/cities', cityRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/budget', budgetRoutes);
+app.use('/api/favorites', favoritesRoutes);
 app.use('/api/admin', adminRoutes);
 
 // Error handling

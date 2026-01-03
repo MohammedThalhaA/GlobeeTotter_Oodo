@@ -12,6 +12,7 @@ import CitySearch from './pages/CitySearch';
 import CityDetail from './pages/CityDetail';
 import PublicTrip from './pages/PublicTrip';
 import Profile from './pages/Profile';
+import Favorites from './pages/Favorites';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminLogin from './pages/AdminLogin';
 import ForgotPassword from './pages/ForgotPassword';
@@ -226,6 +227,16 @@ function AppRoutes() {
                     <ProtectedRoute>
                         <AuthenticatedLayout>
                             <Profile />
+                        </AuthenticatedLayout>
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/favorites"
+                element={
+                    <ProtectedRoute>
+                        <AuthenticatedLayout>
+                            <Favorites />
                         </AuthenticatedLayout>
                     </ProtectedRoute>
                 }

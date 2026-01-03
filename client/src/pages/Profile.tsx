@@ -13,7 +13,6 @@ import {
     Plane,
     MapPin,
     Calendar,
-    Save,
     Loader2,
     ArrowLeft,
     Globe,
@@ -367,7 +366,7 @@ const Profile = () => {
                                 )}
 
                                 {/* Preferences Tab */}
-                                {activeTab === 'preferences' && (
+                                {!activeTab || activeTab === 'preferences' && (
                                     <div className="space-y-6 animate-fade-in">
                                         <div>
                                             <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
@@ -440,6 +439,31 @@ const Profile = () => {
                                                 </button>
                                             </div>
                                         </div>
+
+                                        <SaveButton
+                                            onClick={async () => {
+                                                setSaving(true);
+                                                try {
+                                                    await authAPI.updateProfile({
+                                                        preferences: {
+                                                            currency,
+                                                            notifications,
+                                                            emailUpdates
+                                                        }
+                                                    });
+                                                    updateUser({ preferences: { currency, notifications, emailUpdates } });
+                                                    setSaved(true);
+                                                    setTimeout(() => setSaved(false), 2000);
+                                                } catch (error) {
+                                                    console.error('Failed to update preferences:', error);
+                                                } finally {
+                                                    setSaving(false);
+                                                }
+                                            }}
+                                            disabled={saving}
+                                            label={saved ? 'Saved!' : 'Save Changes'}
+                                            className="w-full sm:w-auto"
+                                        />
                                     </div>
                                 )}
 

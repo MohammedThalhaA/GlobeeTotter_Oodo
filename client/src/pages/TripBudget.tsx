@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { budgetAPI, tripsAPI } from '../services/api';
+import { budgetAPI } from '../services/api';
+import { formatCurrency } from '../utils/currency';
+import { useAuth } from '../context/AuthContext';
 import Button from '../components/Button';
 import {
     ArrowLeft,
@@ -8,7 +10,6 @@ import {
     PieChart,
     BarChart3,
     MapPin,
-    Calendar,
     Loader2,
     TrendingUp,
     Home,
@@ -24,7 +25,6 @@ import {
     XAxis,
     YAxis,
     Tooltip,
-    Legend,
 } from 'recharts';
 
 interface BudgetData {
@@ -47,6 +47,7 @@ const COLORS = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#8b5cf6', '#06b6d4'
 const TripBudget = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const { user } = useAuth();
     const tripId = Number(id);
 
     const [budget, setBudget] = useState<BudgetData | null>(null);
@@ -71,7 +72,7 @@ const TripBudget = () => {
         fetchBudget();
     }, [tripId]);
 
-    const formatCurrency = (value: number) => `$${value.toLocaleString()}`;
+
 
     const formatDate = (dateStr: string) => {
         const date = new Date(dateStr);
@@ -128,9 +129,9 @@ const TripBudget = () => {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-emerald-100 text-sm mb-1">Estimated Total Budget</p>
-                                <p className="text-4xl font-bold">{formatCurrency(budget.grandTotal)}</p>
+                                <p className="text-4xl font-bold">{formatCurrency(budget.grandTotal, user?.preferences?.currency)}</p>
                                 <p className="text-emerald-200 text-sm mt-2">
-                                    {budget.totalDays} days • ~{formatCurrency(avgDailyCost)}/day
+                                    {budget.totalDays} days • ~{formatCurrency(avgDailyCost, user?.preferences?.currency)}/day
                                 </p>
                             </div>
                             <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center">
@@ -156,7 +157,7 @@ const TripBudget = () => {
                                         <item.icon className="w-5 h-5" style={{ color: COLORS[idx] }} />
                                     </div>
                                     <p className="text-xs text-slate-500">{item.name}</p>
-                                    <p className="font-bold text-slate-900">{formatCurrency(item.value)}</p>
+                                    <p className="font-bold text-slate-900">{formatCurrency(item.value, user?.preferences?.currency)}</p>
                                 </div>
                             ))}
                         </div>
@@ -185,7 +186,7 @@ const TripBudget = () => {
                                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                             ))}
                                         </Pie>
-                                        <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                                        <Tooltip formatter={(value: number) => formatCurrency(value, user?.preferences?.currency)} />
                                     </RechartsPieChart>
                                 </ResponsiveContainer>
                             </div>
@@ -213,7 +214,7 @@ const TripBudget = () => {
                                                     <p className="text-xs text-slate-500">{city.days} days</p>
                                                 </div>
                                             </div>
-                                            <p className="font-semibold text-slate-900">{formatCurrency(city.cost)}</p>
+                                            <p className="font-semibold text-slate-900">{formatCurrency(city.cost, user?.preferences?.currency)}</p>
                                         </div>
                                     ))}
                                 </div>
@@ -239,13 +240,13 @@ const TripBudget = () => {
                                             tickLine={false}
                                         />
                                         <YAxis
-                                            tickFormatter={(v) => `$${v}`}
+                                            tickFormatter={(v) => formatCurrency(v, user?.preferences?.currency)}
                                             tick={{ fontSize: 12 }}
                                             axisLine={false}
                                             tickLine={false}
                                         />
                                         <Tooltip
-                                            formatter={(value: number) => formatCurrency(value)}
+                                            formatter={(value: number) => formatCurrency(value, user?.preferences?.currency)}
                                             labelFormatter={formatDate}
                                             contentStyle={{
                                                 borderRadius: '12px',
@@ -274,7 +275,7 @@ const TripBudget = () => {
                                                 <div className="flex items-center justify-between mb-1">
                                                     <span className="text-sm text-slate-600 capitalize">{cat.category}</span>
                                                     <span className="text-sm font-medium text-slate-900">
-                                                        {formatCurrency(cat.cost)}
+                                                        {formatCurrency(cat.cost, user?.preferences?.currency)}
                                                     </span>
                                                 </div>
                                                 <div className="h-2 bg-slate-100 rounded-full overflow-hidden">

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { tripsAPI, citiesAPI } from '../services/api';
+import { tripsAPI, citiesAPI, favoritesAPI } from '../services/api';
 import { formatCurrency } from '../utils/currency';
 import TravelWidgets from '../components/TravelWidgets';
 import {
@@ -14,6 +14,7 @@ import {
 import { DashboardSkeleton } from '../components/Skeleton';
 import type { City } from '../types';
 import { useAuth } from '../context/AuthContext';
+import MapModal from '../components/MapModal';
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -22,23 +23,87 @@ const Dashboard = () => {
     const [upcomingTrips, setUpcomingTrips] = useState<any[]>([]);
     const [popularCities, setPopularCities] = useState<City[]>([]);
     const [activeTab, setActiveTab] = useState('Most Popular');
+    const [favorites, setFavorites] = useState<number[]>([]);
+    const [showMapModal, setShowMapModal] = useState(false);
 
-    // Mock data for other tabs based on duplicates/modifications of existing data for demo purposes
+    // Distinct mock data for different tabs
+    const specialOffers = [
+        {
+            id: 'so-1',
+            name: 'Dubai',
+            country: 'UAE',
+            image_url: 'https://images.unsplash.com/photo-1518684079858-191c49ea07d8?q=80&w=500&auto=format&fit=crop',
+            avg_daily_cost: 250,
+            popularity_score: 98,
+            offerText: 'Limited Time Deal'
+        },
+        {
+            id: 'so-2',
+            name: 'Bali',
+            country: 'Indonesia',
+            image_url: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=500&h=350&fit=crop',
+            avg_daily_cost: 80,
+            popularity_score: 95,
+            offerText: '50% Off'
+        },
+        {
+            id: 'so-3',
+            name: 'Santorini',
+            country: 'Greece',
+            image_url: 'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=500&h=350&fit=crop',
+            avg_daily_cost: 180,
+            popularity_score: 97,
+            offerText: 'Couple Package'
+        },
+        {
+            id: 'so-4',
+            name: 'Kyoto',
+            country: 'Japan',
+            image_url: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=500&h=350&fit=crop',
+            avg_daily_cost: 140,
+            popularity_score: 94,
+            offerText: 'Spring Sale'
+        }
+    ];
+
+    const nearMeCities = [
+        {
+            id: 'nm-1',
+            name: 'Lake Tahoe',
+            country: '25 km away',
+            image_url: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=500&auto=format&fit=crop',
+            avg_daily_cost: 120,
+            popularity_score: 88
+        },
+        {
+            id: 'nm-2',
+            name: 'Napa Valley',
+            country: '45 km away',
+            image_url: 'https://images.unsplash.com/photo-1515286576777-a8c991854449?q=80&w=500&auto=format&fit=crop',
+            avg_daily_cost: 180,
+            popularity_score: 92
+        },
+        {
+            id: 'nm-3',
+            name: 'Yosemite',
+            country: '120 km away',
+            image_url: 'https://images.unsplash.com/photo-1532274402911-5a369e4c4bb5?w=500&h=350&fit=crop',
+            avg_daily_cost: 90,
+            popularity_score: 96
+        },
+        {
+            id: 'nm-4',
+            name: 'Big Sur',
+            country: '150 km away',
+            image_url: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=500&h=350&fit=crop',
+            avg_daily_cost: 110,
+            popularity_score: 89
+        }
+    ];
+
     const getTabContent = () => {
-        if (activeTab === 'Special offer') {
-            return popularCities.map(city => ({
-                ...city,
-                id: `special-${city.id}`, // Unique keys
-                avg_daily_cost: (city.avg_daily_cost || 100) * 0.8 // 20% discount
-            }));
-        }
-        if (activeTab === 'Near Me') {
-            return popularCities.slice(0, 3).map(city => ({
-                ...city,
-                id: `near-${city.id}`, // Unique keys
-                country: '50km away' // Mock distance
-            }));
-        }
+        if (activeTab === 'Special offer') return specialOffers;
+        if (activeTab === 'Near Me') return nearMeCities;
         return popularCities;
     };
 
@@ -47,9 +112,10 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [tripsRes, citiesRes] = await Promise.all([
+                const [tripsRes, citiesRes, favoritesRes] = await Promise.all([
                     tripsAPI.getAll(),
-                    citiesAPI.getAll()
+                    citiesAPI.getAll(),
+                    favoritesAPI.getAll()
                 ]);
 
                 if (tripsRes.data.success) {
@@ -64,6 +130,10 @@ const Dashboard = () => {
                         .slice(0, 4)
                     );
                 }
+
+                if (favoritesRes.data.success) {
+                    setFavorites(favoritesRes.data.data.map((city: City) => city.id));
+                }
             } catch (error) {
                 console.error('Failed to fetch dashboard data:', error);
             } finally {
@@ -73,6 +143,33 @@ const Dashboard = () => {
 
         fetchData();
     }, []);
+
+    const toggleFavorite = async (e: React.MouseEvent, cityId: string | number) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Handle mock IDs (skip backend for mock only items)
+        if (typeof cityId === 'string' && (cityId.startsWith('so-') || cityId.startsWith('nm-'))) {
+            // For now, just visually toggle if we wanted to support mock favorites locally
+            // But since backend requires numeric ID, we'll skip for mock data or handle it if we converted them
+            return;
+        }
+
+        const numericId = Number(cityId);
+        const isFavorited = favorites.includes(numericId);
+
+        try {
+            if (isFavorited) {
+                await favoritesAPI.remove(numericId);
+                setFavorites(prev => prev.filter(id => id !== numericId));
+            } else {
+                await favoritesAPI.add(numericId);
+                setFavorites(prev => [...prev, numericId]);
+            }
+        } catch (error) {
+            console.error('Failed to toggle favorite:', error);
+        }
+    };
 
     if (loading) return <DashboardSkeleton />;
 
@@ -104,7 +201,7 @@ const Dashboard = () => {
                                             </p>
                                         </div>
                                         <span className="text-primary-600 font-bold bg-primary-50 px-3 py-1 rounded-full text-sm">
-                                            {formatCurrency(trip.budget || 0, user?.currency)}
+                                            {formatCurrency(trip.budget || 0, user?.preferences?.currency)}
                                         </span>
                                     </div>
 
@@ -154,13 +251,13 @@ const Dashboard = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {/* Travel Toolkit Widget */}
                         <div className="h-[320px]">
-                            <TravelWidgets nextTrip={upcomingTrips[0]} userCurrency={user?.currency} />
+                            <TravelWidgets nextTrip={upcomingTrips[0]} userCurrency={user?.preferences?.currency} />
                         </div>
 
                         {/* Recently Explored Map */}
                         <div
                             className="bg-white p-6 rounded-3xl shadow-card h-fit relative overflow-hidden group cursor-pointer transition-transform hover:scale-[1.02]"
-                            onClick={() => navigate('/explore')}
+                            onClick={() => setShowMapModal(true)}
                         >
                             <div className="flex items-center justify-between mb-4 relative z-10">
                                 <h3 className="font-bold text-slate-900">Recently Explored</h3>
@@ -192,6 +289,8 @@ const Dashboard = () => {
                             </div>
                         </div>
                     </div>
+
+                    <MapModal isOpen={showMapModal} onClose={() => setShowMapModal(false)} />
 
                     {/* Recent Activity Card (Merged Tables) */}
                     <div className="bg-white p-6 rounded-3xl shadow-card space-y-8">
@@ -270,38 +369,47 @@ const Dashboard = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {displayCities.map((city) => (
-                        <Link to={`/cities/${city.id.toString().replace('special-', '').replace('near-', '')}`} key={city.id} className="group block bg-white rounded-3xl p-3 shadow-card hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                            <div className="relative h-48 rounded-2xl overflow-hidden mb-4">
-                                <img src={city.image_url} alt={city.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                                <button className="absolute top-3 right-3 w-8 h-8 bg-white/30 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white text-white hover:text-red-500 transition-colors">
-                                    <Heart className="w-4 h-4" />
-                                </button>
-                                <div className="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-lg">
-                                    {activeTab === 'Special offer' ? 'Special Deal!' : (Math.floor(Math.random() * 5) + 2 + ' Offers')}
-                                </div>
-                            </div>
+                    {displayCities.map((city) => {
+                        const isMock = typeof city.id === 'string';
+                        const isFavorited = !isMock && favorites.includes(city.id as number);
 
-                            <div className="px-2 pb-2">
-                                <h3 className="font-bold text-slate-900 text-lg mb-1">{city.name}</h3>
-
-                                <div className="flex items-center justify-between mb-2">
-                                    <div className="text-primary-600 font-bold">
-                                        ${Math.round(city.avg_daily_cost || 100)}<span className="text-xs text-slate-400 font-normal">/day</span>
-                                    </div>
-                                    <div className="flex items-center gap-1 text-xs font-semibold text-slate-700">
-                                        <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                        4.9 <span className="text-slate-400 font-normal">({city.popularity_score} reviews)</span>
+                        return (
+                            <Link to={`/cities/${city.id.toString().replace('special-', '').replace('near-', '')}`} key={city.id} className="group block bg-white rounded-3xl p-3 shadow-card hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                                <div className="relative h-48 rounded-2xl overflow-hidden mb-4">
+                                    <img src={city.image_url} alt={city.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                    <button
+                                        onClick={(e) => toggleFavorite(e, city.id)}
+                                        className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow-sm ${isFavorited ? 'bg-rose-50 text-rose-500' : 'bg-white/30 backdrop-blur-md text-white hover:bg-white hover:text-rose-500'}`}
+                                        title={isFavorited ? "Remove from favorites" : "Add to favorites"}
+                                    >
+                                        <Heart className={`w-4 h-4 ${isFavorited ? 'fill-rose-500' : ''}`} />
+                                    </button>
+                                    <div className="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-lg">
+                                        {activeTab === 'Special offer' ? 'Special Deal!' : (Math.floor(Math.random() * 5) + 2 + ' Offers')}
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-1 text-xs text-slate-400">
-                                    <MapPin className="w-3 h-3" />
-                                    <span className="truncate max-w-[200px]">{city.country}</span>
+                                <div className="px-2 pb-2">
+                                    <h3 className="font-bold text-slate-900 text-lg mb-1">{city.name}</h3>
+
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className="text-primary-600 font-bold">
+                                            {formatCurrency(Math.round(city.avg_daily_cost || 100), user?.preferences?.currency)}<span className="text-xs text-slate-400 font-normal">/day</span>
+                                        </div>
+                                        <div className="flex items-center gap-1 text-xs font-semibold text-slate-700">
+                                            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                            4.9 <span className="text-slate-400 font-normal">({city.popularity_score} reviews)</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-1 text-xs text-slate-400">
+                                        <MapPin className="w-3 h-3" />
+                                        <span className="truncate max-w-[200px]">{city.country}</span>
+                                    </div>
                                 </div>
-                            </div>
-                        </Link>
-                    ))}
+                            </Link>
+                        );
+                    })}
                 </div>
             </div>
         </div>

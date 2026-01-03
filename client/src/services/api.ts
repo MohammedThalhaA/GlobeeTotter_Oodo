@@ -46,7 +46,7 @@ export const authAPI = {
 
     getProfile: () => api.get('/auth/profile'),
 
-    updateProfile: (data: { name?: string; profile_photo?: string }) =>
+    updateProfile: (data: { name?: string; profile_photo?: string; preferences?: { currency?: string; notifications?: boolean; emailUpdates?: boolean } }) =>
         api.put('/auth/profile', data),
 
     forgotPassword: (email: string) =>
@@ -169,6 +169,15 @@ export const activitiesAPI = {
 // Budget API
 export const budgetAPI = {
     getTripBudget: (tripId: number) => api.get(`/budget/trips/${tripId}`),
+};
+
+// Favorites API
+export const favoritesAPI = {
+    getAll: () => api.get('/favorites'),
+
+    add: (cityId: number) => api.post('/favorites', { cityId }),
+
+    remove: (cityId: number) => api.delete(`/favorites/${cityId}`),
 };
 
 export default api;

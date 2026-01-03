@@ -97,6 +97,17 @@ CREATE INDEX idx_trip_activities_trip_stop_id ON trip_activities(trip_stop_id);
 CREATE INDEX idx_activities_city_id ON activities(city_id);
 CREATE INDEX idx_cities_country ON cities(country);
 
+-- Favorites table
+CREATE TABLE favorites (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    city_id INTEGER NOT NULL REFERENCES cities(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, city_id)
+);
+
+CREATE INDEX idx_favorites_user_id ON favorites(user_id);
+
 -- Insert some sample cities with HD Unsplash images
 INSERT INTO cities (name, country, region, avg_daily_cost, popularity_score, description, image_url) VALUES
 ('Paris', 'France', 'Europe', 150.00, 95, 'The City of Light, known for Eiffel Tower, Louvre, and romantic ambiance', 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=2000&q=90'),

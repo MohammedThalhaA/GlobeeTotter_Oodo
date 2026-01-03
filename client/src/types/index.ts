@@ -28,5 +28,12 @@ export interface User {
     name: string;
     email: string;
     profile_photo?: string;
+    preferences?: {
+        currency?: string;
+        notifications?: boolean;
+        emailUpdates?: boolean;
+    };
     is_admin?: boolean;
+    created_at?: string;
+    updated_at?: string;
 }

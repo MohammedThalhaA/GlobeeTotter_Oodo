@@ -2,8 +2,11 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Search, Bell, Phone, Mail, ChevronDown } from 'lucide-react';
 
+import { useNavigate } from 'react-router-dom';
+
 const TopBar = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState('');
 
     return (
@@ -34,7 +37,10 @@ const TopBar = () => {
                         <span className="absolute top-2 right-2 w-2 h-2 bg-primary-500 rounded-full border-2 border-white"></span>
                     </button>
 
-                    <div className="flex items-center gap-3 cursor-pointer hover:bg-slate-50 pr-2 pl-1 py-1 rounded-full transition-colors">
+                    <div
+                        className="flex items-center gap-3 cursor-pointer hover:bg-slate-50 pr-2 pl-1 py-1 rounded-full transition-colors"
+                        onClick={() => navigate('/profile')}
+                    >
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-accent-400 p-[2px]">
                             <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
                                 {user?.profile_photo ? (

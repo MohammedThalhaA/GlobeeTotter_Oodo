@@ -15,20 +15,24 @@ export const CURRENCIES: Record<string, Currency> = {
     SGD: { symbol: 'S$', rate: 1.35 },
 };
 
+// Base currency is USD. All amounts stored in DB are assumed USD.
 export const formatCurrency = (amount: number | string, currencyCode: string = 'USD'): string => {
     const value = typeof amount === 'string' ? parseFloat(amount) : amount;
     if (isNaN(value)) return '';
+
+    const currency = CURRENCIES[currencyCode] || CURRENCIES['USD'];
+    const rate = currency.rate;
+    const convertedValue = value * rate;
 
     // Use Intl.NumberFormat for proper formatting
     try {
         return new Intl.NumberFormat('en-US', {
             style: 'currency',
             currency: currencyCode,
-            maximumFractionDigits: 0, // Usually rounded for clean display in UI
-        }).format(value);
+            maximumFractionDigits: 0,
+        }).format(convertedValue);
     } catch (e) {
-        // Fallback if currency code is invalid
-        const symbol = CURRENCIES[currencyCode]?.symbol || currencyCode;
-        return `${symbol}${value.toFixed(0)}`;
+        // Fallback if currency code is invalid or Intl fails
+        return `${currency.symbol}${convertedValue.toFixed(0)}`;
     }
 };

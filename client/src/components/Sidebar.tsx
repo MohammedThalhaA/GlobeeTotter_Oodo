@@ -4,12 +4,10 @@ import {
     LayoutDashboard,
     Map,
     Compass,
-    Settings,
-    User,
     LogOut,
-    CreditCard,
     PlusCircle,
-    BarChart3
+    BarChart3,
+    Heart
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -18,11 +16,10 @@ const Sidebar = () => {
 
     const menuItems = [
         { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-        { path: '/trips', label: 'Tour', icon: Map, subItems: ['Recent Tour', 'Favorite'] },
-        // { path: '/payments', label: 'Payment', icon: CreditCard }, // Placeholder for now
+        { path: '/trips', label: 'Trip', icon: Map, subItems: ['Recent Trip'] },
+        { path: '/favorites', label: 'Wishlist', icon: Heart },
         { path: '/explore', label: 'Explore', icon: Compass },
-        { path: '/profile', label: 'Profile Edit', icon: User },
-        // { path: '/settings', label: 'Settings', icon: Settings }, // Placeholder for now
+
         ...(user?.is_admin ? [{ path: '/admin', label: 'Admin', icon: BarChart3 }] : []),
     ];
 
@@ -60,8 +57,8 @@ const Sidebar = () => {
                         <Link
                             to={item.path}
                             className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive(item.path)
-                                    ? 'bg-primary-50 text-primary-600 font-semibold'
-                                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                                ? 'bg-primary-50 text-primary-600 font-semibold'
+                                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                                 }`}
                         >
                             <item.icon className={`w-5 h-5 ${isActive(item.path) ? 'text-primary-600' : 'text-slate-400'}`} />
