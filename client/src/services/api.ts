@@ -48,6 +48,18 @@ export const authAPI = {
 
     updateProfile: (data: { name?: string; profile_photo?: string }) =>
         api.put('/auth/profile', data),
+
+    forgotPassword: (email: string) =>
+        api.post('/auth/forgot-password', { email }),
+
+    resetPassword: (token: string, password: string) =>
+        api.post('/auth/reset-password', { token, password }),
+
+    deleteAccount: (password: string) =>
+        api.delete('/auth/account', { data: { password } }),
+
+    changePassword: (currentPassword: string, newPassword: string) =>
+        api.put('/auth/change-password', { currentPassword, newPassword }),
 };
 
 // Trips API
@@ -79,6 +91,8 @@ export const tripsAPI = {
     }>) => api.put(`/trips/${id}`, data),
 
     delete: (id: number) => api.delete(`/trips/${id}`),
+
+    clone: (id: number) => api.post(`/trips/${id}/clone`),
 };
 
 // Cities API

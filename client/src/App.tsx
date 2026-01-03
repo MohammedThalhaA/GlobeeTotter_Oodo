@@ -16,6 +16,7 @@ import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminLogin from './pages/AdminLogin';
 import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import SidebarLayout from './layouts/SidebarLayout';
 import { Loader2 } from 'lucide-react';
 
@@ -120,6 +121,14 @@ function AppRoutes() {
           </AuthLayout>
         }
       />
+      <Route
+        path="/reset-password"
+        element={
+          <AuthLayout>
+            <ResetPassword />
+          </AuthLayout>
+        }
+      />
 
       {/* Protected Routes */}
       <Route
@@ -146,9 +155,9 @@ function AppRoutes() {
         path="/trips/create"
         element={
           <ProtectedRoute>
-            <Layout>
+            <AuthenticatedLayout>
               <CreateTrip />
-            </Layout>
+            </AuthenticatedLayout>
           </ProtectedRoute>
         }
       />
@@ -156,9 +165,9 @@ function AppRoutes() {
         path="/trips/:id"
         element={
           <ProtectedRoute>
-            <Layout>
+            <AuthenticatedLayout>
               <TripDetail />
-            </Layout>
+            </AuthenticatedLayout>
           </ProtectedRoute>
         }
       />
@@ -166,9 +175,9 @@ function AppRoutes() {
         path="/trips/:id/edit"
         element={
           <ProtectedRoute>
-            <Layout>
+            <AuthenticatedLayout>
               <TripEdit />
-            </Layout>
+            </AuthenticatedLayout>
           </ProtectedRoute>
         }
       />
@@ -196,9 +205,9 @@ function AppRoutes() {
         path="/trips/:id/budget"
         element={
           <ProtectedRoute>
-            <Layout>
+            <AuthenticatedLayout>
               <TripBudget />
-            </Layout>
+            </AuthenticatedLayout>
           </ProtectedRoute>
         }
       />
@@ -206,9 +215,9 @@ function AppRoutes() {
         path="/trips/:id/calendar"
         element={
           <ProtectedRoute>
-            <Layout>
+            <AuthenticatedLayout>
               <TripCalendar />
-            </Layout>
+            </AuthenticatedLayout>
           </ProtectedRoute>
         }
       />
@@ -262,7 +271,7 @@ function AppRoutes() {
 
 function App() {
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <AuthProvider>
         <AppRoutes />
       </AuthProvider>

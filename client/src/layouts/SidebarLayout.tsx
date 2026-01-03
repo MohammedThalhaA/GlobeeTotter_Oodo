@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import Sidebar from '../components/Sidebar';
 import TopBar from '../components/TopBar';
 
@@ -12,7 +12,7 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
             <Sidebar />
             <div className="flex-1 ml-64 flex flex-col min-h-screen">
                 <TopBar />
-                <main className="flex-1 p-8 overflow-y-auto">
+                <main className="flex-1 px-8 pb-8 pt-4 mt-20">
                     {children}
                 </main>
             </div>

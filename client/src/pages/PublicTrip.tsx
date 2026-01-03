@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { tripsAPI, stopsAPI } from '../services/api';
 import Button from '../components/Button';
+import ShareModal from '../components/ShareModal';
 import {
     Globe,
     Calendar,
@@ -12,7 +13,6 @@ import {
     Copy,
     Check,
     Loader2,
-    ExternalLink,
 } from 'lucide-react';
 
 interface Activity {
@@ -45,13 +45,41 @@ interface Trip {
 
 const PublicTrip = () => {
     const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
     const tripId = Number(id);
 
     const [trip, setTrip] = useState<Trip | null>(null);
     const [stops, setStops] = useState<Stop[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [copied, setCopied] = useState(false);
+    const [showShareModal, setShowShareModal] = useState(false);
+    const [cloning, setCloning] = useState(false);
+    const [cloneSuccess, setCloneSuccess] = useState(false);
+
+    const handleCloneTrip = async () => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            // Redirect to login if not authenticated
+            navigate('/login');
+            return;
+        }
+
+        setCloning(true);
+        try {
+            const response = await tripsAPI.clone(tripId);
+            if (response.data.success) {
+                setCloneSuccess(true);
+                setTimeout(() => {
+                    navigate(`/trips/${response.data.data.id}`);
+                }, 1500);
+            }
+        } catch (err) {
+            console.error('Failed to clone trip:', err);
+            alert('Failed to clone trip. Please try again.');
+        } finally {
+            setCloning(false);
+        }
+    };
 
     useEffect(() => {
         const fetchTrip = async () => {
@@ -80,6 +108,22 @@ const PublicTrip = () => {
         fetchTrip();
     }, [tripId]);
 
+    const handleShare = async () => {
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: trip?.title || 'Check out my trip!',
+                    text: `Check out this trip to ${stops[0]?.city_name || 'an amazing destination'}!`,
+                    url: window.location.href,
+                });
+            } catch (error) {
+                console.log('Error sharing:', error);
+            }
+        } else {
+            setShowShareModal(true);
+        }
+    };
+
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-US', {
             weekday: 'short',
@@ -94,12 +138,6 @@ const PublicTrip = () => {
         const endDate = new Date(end);
         const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
         return `${days} day${days !== 1 ? 's' : ''}`;
-    };
-
-    const handleCopyLink = () => {
-        navigator.clipboard.writeText(window.location.href);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
     };
 
     const getRandomGradient = (idx: number) => {
@@ -263,30 +301,33 @@ const PublicTrip = () => {
                                 Share this itinerary with friends and family
                             </p>
                             <Button
-                                onClick={handleCopyLink}
+                                onClick={handleShare}
                                 variant="secondary"
                                 className="w-full"
-                                icon={copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                                icon={<Share2 className="w-4 h-4" />}
                             >
-                                {copied ? 'Link Copied!' : 'Copy Link'}
+                                Share Trip
                             </Button>
                         </div>
 
-                        {/* CTA */}
+                        {/* Clone Trip CTA */}
                         <div className="bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl p-6 text-white">
                             <h3 className="font-bold text-lg mb-2">Love this itinerary?</h3>
                             <p className="text-primary-100 text-sm mb-4">
-                                Create your own travel plans with GlobeTrotter
+                                Clone it to your account and customize it for your own adventure!
                             </p>
-                            <Link to="/register">
-                                <Button
-                                    variant="secondary"
-                                    className="w-full bg-white text-primary-600 hover:bg-primary-50"
-                                    icon={<ExternalLink className="w-4 h-4" />}
-                                >
-                                    Get Started Free
-                                </Button>
-                            </Link>
+                            <Button
+                                onClick={handleCloneTrip}
+                                loading={cloning}
+                                variant="secondary"
+                                className={`w-full ${cloneSuccess ? 'bg-green-500 text-white hover:bg-green-600' : 'bg-white text-primary-600 hover:bg-primary-50'}`}
+                                icon={cloneSuccess ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                            >
+                                {cloneSuccess ? 'Cloned! Redirecting...' : 'Clone This Trip'}
+                            </Button>
+                            <p className="text-primary-200 text-xs mt-2 text-center">
+                                {localStorage.getItem('token') ? 'Saves to your account' : 'Login required'}
+                            </p>
                         </div>
 
                         {/* Trip Stats */}
@@ -317,12 +358,14 @@ const PublicTrip = () => {
                 </div>
             </div>
 
-            {/* Footer */}
-            <footer className="bg-white border-t border-slate-200 mt-12 py-8">
-                <div className="max-w-5xl mx-auto px-4 text-center text-slate-500 text-sm">
-                    <p>Powered by <span className="font-semibold text-primary-600">GlobeTrotter</span></p>
-                </div>
-            </footer>
+            {trip && (
+                <ShareModal
+                    isOpen={showShareModal}
+                    onClose={() => setShowShareModal(false)}
+                    title={trip.title}
+                    url={window.location.href}
+                />
+            )}
         </div>
     );
 };

@@ -35,11 +35,27 @@ export const createTrip = async (
             return;
         }
 
+        // Default HD images for trips (Travel, Nature, City themes)
+        const defaultImages = [
+            'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=2000&q=90', // Mountain lake
+            'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=2000&q=90', // Sunset field
+            'https://images.unsplash.com/photo-1499092346589-b9b6be3e94b2?w=2000&q=90', // NYC
+            'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=2000&q=90', // Paris
+            'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=2000&q=90', // Tokyo
+            'https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=2000&q=90', // Venice
+            'https://images.unsplash.com/photo-1533105079780-92b9be482077?w=2000&q=90', // Greek Island
+            'https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=2000&q=90', // Beach
+            'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=2000&q=90', // Travel planning
+            'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=2000&q=90', // Lake boat
+        ];
+
+        const finalCoverPhoto = cover_photo || defaultImages[Math.floor(Math.random() * defaultImages.length)];
+
         const result = await pool.query(
             `INSERT INTO trips (user_id, title, description, start_date, end_date, cover_photo, is_public)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
-            [req.user.id, title, description, start_date, end_date, cover_photo, is_public || false]
+            [req.user.id, title, description, start_date, end_date, finalCoverPhoto, is_public || false]
         );
 
         res.status(201).json({
@@ -309,6 +325,97 @@ export const getTripStats = async (
         } as ApiResponse);
     } catch (error) {
         console.error('Get trip stats error:', error);
+        res.status(500).json({ success: false, error: 'Server error' });
+    }
+};
+
+// Clone a trip (copy to user's account)
+export const cloneTrip = async (
+    req: AuthRequest,
+    res: Response
+): Promise<void> => {
+    try {
+        if (!req.user) {
+            res.status(401).json({ success: false, error: 'Not authenticated' });
+            return;
+        }
+
+        const { id } = req.params;
+
+        // Get original trip
+        const tripResult = await pool.query(
+            'SELECT * FROM trips WHERE id = $1',
+            [id]
+        );
+
+        if (tripResult.rows.length === 0) {
+            res.status(404).json({ success: false, error: 'Trip not found' });
+            return;
+        }
+
+        const originalTrip = tripResult.rows[0];
+
+        // Check if trip is public or owned by user
+        if (!originalTrip.is_public && originalTrip.user_id !== req.user.id) {
+            res.status(403).json({ success: false, error: 'Cannot clone private trip' });
+            return;
+        }
+
+        // Create new trip
+        const newTripResult = await pool.query(
+            `INSERT INTO trips (user_id, title, description, start_date, end_date, cover_photo, is_public)
+            VALUES ($1, $2, $3, $4, $5, $6, FALSE)
+            RETURNING *`,
+            [
+                req.user.id,
+                `${originalTrip.title} (Copy)`,
+                originalTrip.description,
+                originalTrip.start_date,
+                originalTrip.end_date,
+                originalTrip.cover_photo
+            ]
+        );
+
+        const newTrip = newTripResult.rows[0];
+
+        // Clone stops
+        const stopsResult = await pool.query(
+            'SELECT * FROM trip_stops WHERE trip_id = $1 ORDER BY order_index',
+            [id]
+        );
+
+        for (const stop of stopsResult.rows) {
+            const newStopResult = await pool.query(
+                `INSERT INTO trip_stops (trip_id, city_id, city_name, start_date, end_date, order_index, notes)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
+                RETURNING id`,
+                [newTrip.id, stop.city_id, stop.city_name, stop.start_date, stop.end_date, stop.order_index, stop.notes]
+            );
+
+            const newStopId = newStopResult.rows[0].id;
+
+            // Clone activities for this stop
+            const activitiesResult = await pool.query(
+                'SELECT * FROM trip_activities WHERE trip_stop_id = $1',
+                [stop.id]
+            );
+
+            for (const activity of activitiesResult.rows) {
+                await pool.query(
+                    `INSERT INTO trip_activities (trip_stop_id, activity_id, activity_name, scheduled_date, scheduled_time, custom_cost, notes, status)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+                    [newStopId, activity.activity_id, activity.activity_name, activity.scheduled_date, activity.scheduled_time, activity.custom_cost, activity.notes, 'planned']
+                );
+            }
+        }
+
+        res.status(201).json({
+            success: true,
+            message: 'Trip cloned successfully',
+            data: newTrip,
+        } as ApiResponse<Trip>);
+    } catch (error) {
+        console.error('Clone trip error:', error);
         res.status(500).json({ success: false, error: 'Server error' });
     }
 };

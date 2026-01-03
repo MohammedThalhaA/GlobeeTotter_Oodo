@@ -7,7 +7,7 @@ const TopBar = () => {
     const [searchTerm, setSearchTerm] = useState('');
 
     return (
-        <header className="h-20 bg-white sticky top-0 z-40 px-8 flex items-center justify-between shadow-sm">
+        <header className="h-20 bg-white fixed top-0 right-0 left-64 z-40 px-8 flex items-center justify-between shadow-sm">
             {/* Search */}
             <div className="flex-1 max-w-md">
                 <div className="relative">

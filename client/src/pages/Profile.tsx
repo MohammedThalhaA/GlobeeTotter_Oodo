@@ -118,12 +118,23 @@ const Profile = () => {
             setPasswordError('Password must be at least 6 characters');
             return;
         }
+        if (!currentPassword) {
+            setPasswordError('Please enter your current password');
+            return;
+        }
 
-        // Simulated - would need backend endpoint
-        setPasswordSuccess('Password changed successfully!');
-        setCurrentPassword('');
-        setNewPassword('');
-        setConfirmPassword('');
+        try {
+            const response = await authAPI.changePassword(currentPassword, newPassword);
+            if (response.data.success) {
+                setPasswordSuccess('Password changed successfully!');
+                setCurrentPassword('');
+                setNewPassword('');
+                setConfirmPassword('');
+            }
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { error?: string } } };
+            setPasswordError(error.response?.data?.error || 'Failed to change password');
+        }
     };
 
     const handleDeleteAccount = async () => {
@@ -231,10 +242,10 @@ const Profile = () => {
                                             key={tab.id}
                                             onClick={() => setActiveTab(tab.id)}
                                             className={`flex items-center gap-2 px-6 py-4 font-medium text-sm transition-colors border-b-2 -mb-px ${activeTab === tab.id
-                                                    ? tab.danger
-                                                        ? 'text-red-600 border-red-600'
-                                                        : 'text-primary-600 border-primary-600'
-                                                    : 'text-slate-500 border-transparent hover:text-slate-700 hover:border-slate-300'
+                                                ? tab.danger
+                                                    ? 'text-red-600 border-red-600'
+                                                    : 'text-primary-600 border-primary-600'
+                                                : 'text-slate-500 border-transparent hover:text-slate-700 hover:border-slate-300'
                                                 }`}
                                         >
                                             <tab.icon className="w-4 h-4" />
@@ -323,7 +334,7 @@ const Profile = () => {
                                             </div>
                                         )}
 
-                                        <div className="space-y-4">
+                                        <form onSubmit={(e) => { e.preventDefault(); handleChangePassword(); }} className="space-y-4">
                                             <FloatingInput
                                                 label="Current Password"
                                                 type="password"
@@ -344,15 +355,15 @@ const Profile = () => {
                                                 value={confirmPassword}
                                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                             />
-                                        </div>
 
-                                        <Button
-                                            onClick={handleChangePassword}
-                                            disabled={!currentPassword || !newPassword || !confirmPassword}
-                                            className="w-full sm:w-auto"
-                                        >
-                                            Update Password
-                                        </Button>
+                                            <Button
+                                                type="submit"
+                                                disabled={!currentPassword || !newPassword || !confirmPassword}
+                                                className="w-full sm:w-auto"
+                                            >
+                                                Update Password
+                                            </Button>
+                                        </form>
                                     </div>
                                 )}
 
@@ -401,8 +412,8 @@ const Profile = () => {
                                                 <button
                                                     onClick={() => setNotifications(!notifications)}
                                                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${notifications
-                                                            ? 'bg-primary-500 text-white'
-                                                            : 'bg-slate-200 text-slate-600'
+                                                        ? 'bg-primary-500 text-white'
+                                                        : 'bg-slate-200 text-slate-600'
                                                         }`}
                                                 >
                                                     {notifications ? 'Enabled' : 'Disabled'}
@@ -422,8 +433,8 @@ const Profile = () => {
                                                 <button
                                                     onClick={() => setEmailUpdates(!emailUpdates)}
                                                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${emailUpdates
-                                                            ? 'bg-accent-500 text-white'
-                                                            : 'bg-slate-200 text-slate-600'
+                                                        ? 'bg-accent-500 text-white'
+                                                        : 'bg-slate-200 text-slate-600'
                                                         }`}
                                                 >
                                                     {emailUpdates ? 'Enabled' : 'Disabled'}

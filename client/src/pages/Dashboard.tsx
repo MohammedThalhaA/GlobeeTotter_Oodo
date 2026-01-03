@@ -76,11 +76,15 @@ const Dashboard = () => {
                                 <div key={trip.id} className="bg-white p-5 rounded-3xl shadow-card hover:shadow-lg transition-shadow">
                                     <div className="flex justify-between items-start mb-4">
                                         <div>
-                                            <h3 className="font-bold text-slate-900 text-lg">{trip.name}</h3>
-                                            <p className="text-slate-400 text-sm">{trip.destination || 'Multiple Destinations'}</p>
+                                            <h3 className="font-bold text-slate-900 text-lg">{trip.title}</h3>
+                                            <p className="text-slate-400 text-sm">
+                                                {trip.cities && trip.cities.length > 0
+                                                    ? trip.cities[0].city_name
+                                                    : (trip.description || 'Global Adventure')}
+                                            </p>
                                         </div>
                                         <span className="text-primary-600 font-bold bg-primary-50 px-3 py-1 rounded-full text-sm">
-                                            ${Math.round(trip.budget || 200)}
+                                            ${Math.round(2000)} {/* Placeholder budget */}
                                         </span>
                                     </div>
 
@@ -94,15 +98,15 @@ const Dashboard = () => {
 
                                         <div className="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-xl">
                                             <MapPin className="w-4 h-4 text-slate-400" />
-                                            <span>{Math.floor(Math.random() * 5) + 3} Stops</span>
+                                            <span>{trip.stop_count || 0} Stops</span>
                                         </div>
                                     </div>
 
                                     <div className="flex gap-3">
                                         <div className="flex-1 overflow-hidden rounded-xl h-24">
                                             <img
-                                                src={`https://source.unsplash.com/random/400x300/?${trip.name.split(' ')[0]},travel`}
-                                                alt="Trip"
+                                                src={trip.cover_photo || `https://source.unsplash.com/random/400x300/?${(trip.title || 'travel').split(' ')[0]},travel`}
+                                                alt={trip.title}
                                                 className="w-full h-full object-cover"
                                                 onError={(e) => {
                                                     (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop';
@@ -111,7 +115,7 @@ const Dashboard = () => {
                                         </div>
                                         <div className="flex-1 overflow-hidden rounded-xl h-24">
                                             <img
-                                                src={`https://source.unsplash.com/random/400x300/?${trip.name.split(' ')[0]},city`}
+                                                src={`https://source.unsplash.com/random/400x300/?${(trip.title || 'city').split(' ')[0]},city`}
                                                 alt="Trip"
                                                 className="w-full h-full object-cover"
                                                 onError={(e) => {

@@ -1,33 +1,68 @@
 import { useState, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import FloatingInput from '../components/FloatingInput';
 import Button from '../components/Button';
-import { Globe, Mail, ArrowLeft, Check } from 'lucide-react';
+import { Globe, Lock, ArrowLeft, Check } from 'lucide-react';
 import { authAPI } from '../services/api';
 
-const ForgotPassword = () => {
-    const [email, setEmail] = useState('');
+const ResetPassword = () => {
+    const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const token = searchParams.get('token') || '';
+
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
-    const [sent, setSent] = useState(false);
+    const [success, setSuccess] = useState(false);
     const [error, setError] = useState('');
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setError('');
+
+        if (password !== confirmPassword) {
+            setError('Passwords do not match');
+            return;
+        }
+
+        if (password.length < 6) {
+            setError('Password must be at least 6 characters');
+            return;
+        }
+
         setLoading(true);
 
         try {
-            await authAPI.forgotPassword(email);
-            setSent(true);
+            await authAPI.resetPassword(token, password);
+            setSuccess(true);
+            setTimeout(() => navigate('/login'), 3000);
         } catch (err: unknown) {
             const error = err as { response?: { data?: { error?: string } } };
-            setError(error.response?.data?.error || 'Failed to send reset email');
+            setError(error.response?.data?.error || 'Failed to reset password');
         } finally {
             setLoading(false);
         }
     };
 
-    if (sent) {
+    if (!token) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+                <div className="w-full max-w-md">
+                    <div className="bg-white rounded-2xl shadow-card p-8 text-center">
+                        <h2 className="text-2xl font-bold text-slate-900 mb-4">Invalid Reset Link</h2>
+                        <p className="text-slate-500 mb-6">
+                            This password reset link is invalid or has expired.
+                        </p>
+                        <Link to="/forgot-password" className="text-primary-600 hover:text-primary-700 font-semibold">
+                            Request a new reset link
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (success) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
                 <div className="w-full max-w-md">
@@ -35,24 +70,10 @@ const ForgotPassword = () => {
                         <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                             <Check className="w-8 h-8 text-green-600" />
                         </div>
-                        <h2 className="text-2xl font-bold text-slate-900 mb-2">Check Your Email</h2>
+                        <h2 className="text-2xl font-bold text-slate-900 mb-2">Password Reset!</h2>
                         <p className="text-slate-500 mb-6">
-                            We've sent a password reset link to <span className="font-semibold text-slate-700">{email}</span>
+                            Your password has been successfully reset. Redirecting to login...
                         </p>
-                        <p className="text-sm text-slate-400 mb-6">
-                            Didn't receive the email? Check your spam folder or try again.
-                        </p>
-                        <div className="space-y-3">
-                            <Button onClick={() => setSent(false)} variant="secondary" className="w-full">
-                                Try Different Email
-                            </Button>
-                            <Link
-                                to="/login"
-                                className="block w-full py-3 text-center text-primary-600 hover:text-primary-700 font-semibold"
-                            >
-                                Back to Login
-                            </Link>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -63,7 +84,6 @@ const ForgotPassword = () => {
         <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
             <div className="w-full max-w-md">
                 <div className="bg-white rounded-2xl shadow-card p-8">
-                    {/* Header */}
                     <Link to="/login" className="flex items-center gap-2 text-slate-600 hover:text-slate-900 mb-6 transition-colors">
                         <ArrowLeft className="w-4 h-4" />
                         Back to login
@@ -73,8 +93,8 @@ const ForgotPassword = () => {
                         <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
                             <Globe className="w-8 h-8 text-white" />
                         </div>
-                        <h2 className="text-2xl font-bold text-slate-900">Forgot Password?</h2>
-                        <p className="text-slate-500 mt-2">No worries, we'll send you reset instructions</p>
+                        <h2 className="text-2xl font-bold text-slate-900">Reset Password</h2>
+                        <p className="text-slate-500 mt-2">Enter your new password below</p>
                     </div>
 
                     {error && (
@@ -85,10 +105,18 @@ const ForgotPassword = () => {
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <FloatingInput
-                            label="Email Address"
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            label="New Password"
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                        />
+
+                        <FloatingInput
+                            label="Confirm Password"
+                            type="password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
                             required
                         />
 
@@ -97,22 +125,15 @@ const ForgotPassword = () => {
                             loading={loading}
                             className="w-full"
                             size="lg"
-                            icon={<Mail className="w-4 h-4" />}
+                            icon={<Lock className="w-4 h-4" />}
                         >
-                            Send Reset Link
+                            Reset Password
                         </Button>
                     </form>
-
-                    <p className="mt-8 text-center text-slate-600">
-                        Remember your password?{' '}
-                        <Link to="/login" className="text-primary-600 hover:text-primary-700 font-semibold">
-                            Sign in
-                        </Link>
-                    </p>
                 </div>
             </div>
         </div>
     );
 };
 
-export default ForgotPassword;
+export default ResetPassword;

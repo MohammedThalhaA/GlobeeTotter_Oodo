@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { tripsAPI } from '../services/api';
 import Button from '../components/Button';
+import ShareModal from '../components/ShareModal';
 import {
     ArrowLeft,
     Calendar,
@@ -21,6 +22,7 @@ interface TripStop {
     country?: string;
     start_date: string;
     end_date: string;
+    avg_daily_cost?: number;
     activities: {
         id: number;
         activity_name: string;
@@ -50,6 +52,7 @@ const TripDetail = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [deleteLoading, setDeleteLoading] = useState(false);
+    const [showShareModal, setShowShareModal] = useState(false);
 
     useEffect(() => {
         const fetchTrip = async () => {
@@ -83,6 +86,23 @@ const TripDetail = () => {
         }
     };
 
+    const handleShare = async () => {
+        const shareUrl = `${window.location.origin}/share/${id}`;
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: trip?.title || 'Check out my trip!',
+                    text: `Check out this trip to ${trip?.stops[0]?.city_name || 'an amazing destination'}!`,
+                    url: shareUrl,
+                });
+            } catch (error) {
+                console.log('Error sharing:', error);
+            }
+        } else {
+            setShowShareModal(true);
+        }
+    };
+
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-US', {
             weekday: 'short',
@@ -108,6 +128,23 @@ const TripDetail = () => {
             'from-indigo-500 to-pink-500',
         ];
         return gradients[idx % gradients.length];
+    };
+
+    const calculateBudget = (stops: TripStop[] = []) => {
+        let total = 0;
+        stops.forEach(stop => {
+            // Daily costs
+            const days = Math.ceil((new Date(stop.end_date).getTime() - new Date(stop.start_date).getTime()) / (1000 * 60 * 60 * 24)) + 1;
+            total += (stop.avg_daily_cost || 0) * days;
+
+            // Activity costs
+            if (stop.activities) {
+                stop.activities.forEach(activity => {
+                    total += Number(activity.custom_cost || 0);
+                });
+            }
+        });
+        return total;
     };
 
     if (loading) {
@@ -171,7 +208,7 @@ const TripDetail = () => {
                         </div>
                         <div className="flex items-center gap-2">
                             <MapPin className="w-4 h-4" />
-                            <span>{trip.stops.length} {trip.stops.length === 1 ? 'stop' : 'stops'}</span>
+                            <span>{trip.stops?.length || 0} {trip.stops?.length === 1 ? 'stop' : 'stops'}</span>
                         </div>
                     </div>
                 </div>
@@ -201,7 +238,7 @@ const TripDetail = () => {
                                 </Link>
                             </div>
 
-                            {trip.stops.length > 0 ? (
+                            {trip.stops && trip.stops.length > 0 ? (
                                 <div className="space-y-4">
                                     {trip.stops.map((stop, index) => (
                                         <div
@@ -271,14 +308,21 @@ const TripDetail = () => {
                                         Edit Trip
                                     </Button>
                                 </Link>
+                                <Link to={`/trips/${trip.id}/budget`} className="block">
+                                    <Button variant="secondary" className="w-full" icon={<DollarSign className="w-4 h-4" />}>
+                                        View Budget
+                                    </Button>
+                                </Link>
+                                <Link to={`/trips/${trip.id}/calendar`} className="block">
+                                    <Button variant="secondary" className="w-full" icon={<Calendar className="w-4 h-4" />}>
+                                        Calendar View
+                                    </Button>
+                                </Link>
                                 <Button
                                     variant="secondary"
                                     className="w-full"
                                     icon={<Share2 className="w-4 h-4" />}
-                                    onClick={() => {
-                                        navigator.clipboard.writeText(window.location.href);
-                                        alert('Link copied to clipboard!');
-                                    }}
+                                    onClick={handleShare}
                                 >
                                     Share Trip
                                 </Button>
@@ -306,12 +350,12 @@ const TripDetail = () => {
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <span className="text-slate-500">Destinations</span>
-                                    <span className="font-medium text-slate-900">{trip.stops.length}</span>
+                                    <span className="font-medium text-slate-900">{trip.stops?.length || 0}</span>
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <span className="text-slate-500">Activities</span>
                                     <span className="font-medium text-slate-900">
-                                        {trip.stops.reduce((acc, stop) => acc + stop.activities.length, 0)}
+                                        {(trip.stops || []).reduce((acc, stop) => acc + (stop.activities?.length || 0), 0)}
                                     </span>
                                 </div>
                                 <hr className="border-slate-100" />
@@ -320,13 +364,24 @@ const TripDetail = () => {
                                         <DollarSign className="w-4 h-4" />
                                         Est. Budget
                                     </span>
-                                    <span className="font-medium text-slate-900">Coming soon</span>
+                                    <span className="font-medium text-slate-900">
+                                        ${calculateBudget(trip.stops).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            {trip && (
+                <ShareModal
+                    isOpen={showShareModal}
+                    onClose={() => setShowShareModal(false)}
+                    title={trip.title}
+                    url={`${window.location.origin}/share/${id}`}
+                />
+            )}
         </div>
     );
 };

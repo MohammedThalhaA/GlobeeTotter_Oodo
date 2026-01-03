@@ -1,6 +1,6 @@
 import { Calendar, MapPin, MoreVertical, Trash2, Edit, Eye } from 'lucide-react';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface TripCardProps {
     trip: {
@@ -19,6 +19,7 @@ interface TripCardProps {
 
 const TripCard: React.FC<TripCardProps> = ({ trip, onDelete }) => {
     const [showMenu, setShowMenu] = useState(false);
+    const navigate = useNavigate();
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-US', {
@@ -45,8 +46,15 @@ const TripCard: React.FC<TripCardProps> = ({ trip, onDelete }) => {
         .filter(Boolean)
         .slice(0, 3);
 
+    const handleCardClick = () => {
+        navigate(`/trips/${trip.id}`);
+    };
+
     return (
-        <div className="card group relative animate-fade-in">
+        <div
+            onClick={handleCardClick}
+            className="card group relative animate-fade-in cursor-pointer hover:shadow-lg transition-shadow"
+        >
             {/* Cover Image / Gradient */}
             <div className={`h-40 bg-gradient-to-br ${getRandomGradient(trip.id)} relative overflow-hidden`}>
                 {trip.cover_photo && (
@@ -66,7 +74,10 @@ const TripCard: React.FC<TripCardProps> = ({ trip, onDelete }) => {
                 )}
 
                 {/* Actions Menu */}
-                <div className="absolute top-3 right-3">
+                <div
+                    className="absolute top-3 right-3"
+                    onClick={(e) => e.stopPropagation()}
+                >
                     <button
                         onClick={() => setShowMenu(!showMenu)}
                         className="p-2 rounded-lg bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors"
@@ -110,7 +121,7 @@ const TripCard: React.FC<TripCardProps> = ({ trip, onDelete }) => {
             {/* Content */}
             <div className="p-5">
                 <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-primary-600 transition-colors">
-                    <Link to={`/trips/${trip.id}`}>{trip.title}</Link>
+                    {trip.title}
                 </h3>
 
                 {trip.description && (

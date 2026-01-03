@@ -18,26 +18,40 @@ import type { City } from '../types';
 const CityDetail = () => {
     const { id } = useParams<{ id: string }>();
     const [city, setCity] = useState<City | null>(null);
+    const [relatedCities, setRelatedCities] = useState<City[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('Overview');
 
     useEffect(() => {
-        const fetchCity = async () => {
+        const fetchCityAndRelated = async () => {
             try {
                 if (id) {
-                    const response = await citiesAPI.getById(parseInt(id));
-                    if (response.data.success) {
-                        setCity(response.data.data);
+                    const [cityRes, allCitiesRes] = await Promise.all([
+                        citiesAPI.getById(parseInt(id)),
+                        citiesAPI.getAll()
+                    ]);
+
+                    if (cityRes.data.success) {
+                        setCity(cityRes.data.data);
+                    }
+
+                    if (allCitiesRes.data.success) {
+                        // Filter out current city and get 5 random ones
+                        const others = allCitiesRes.data.data
+                            .filter((c: City) => c.id !== parseInt(id))
+                            .sort(() => 0.5 - Math.random())
+                            .slice(0, 5);
+                        setRelatedCities(others);
                     }
                 }
             } catch (error) {
-                console.error('Failed to fetch city:', error);
+                console.error('Failed to fetch city details:', error);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchCity();
+        fetchCityAndRelated();
     }, [id]);
 
     if (loading) return <div className="p-8"><Skeleton className="h-96 w-full rounded-3xl" /></div>;
@@ -177,23 +191,35 @@ const CityDetail = () => {
                 <div className="bg-white p-6 rounded-3xl shadow-card">
                     <h3 className="font-bold text-slate-900 mb-6">Places you may like</h3>
                     <div className="space-y-6">
-                        {[
-                            { name: 'Pyramids of Giza', loc: 'New York, USA', price: 50, img: 'https://images.unsplash.com/photo-1599386348421-278065b206d2?w=200&h=150&fit=crop' },
-                            { name: 'Ubud', loc: 'Bali, Indonesia', price: 60, img: 'https://images.unsplash.com/photo-1555400038-63f5ba517a47?w=200&h=150&fit=crop' },
-                            { name: 'Langkawi', loc: 'Malaysia', price: 80, img: 'https://images.unsplash.com/photo-1596422846543-75c6fc197f07?w=200&h=150&fit=crop' },
-                            { name: 'Grand Palace', loc: 'Bangkok', price: 20, img: 'https://images.unsplash.com/photo-1582468575304-633b4974f1da?w=200&h=150&fit=crop' },
-                            { name: 'Pyramids of Giza', loc: 'New York, USA', price: 40, img: 'https://images.unsplash.com/photo-1629215089332-9cb9d363945c?w=200&h=150&fit=crop' }
-                        ].map((place, i) => (
-                            <Link to="#" key={i} className="flex gap-4 group">
-                                <img src={place.img} alt={place.name} className="w-24 h-16 rounded-xl object-cover group-hover:scale-105 transition-transform" />
-                                <div>
-                                    <h4 className="font-bold text-slate-900 text-sm mb-1">{place.name}</h4>
-                                    <p className="text-xs text-slate-400 mb-2">{place.loc}</p>
-                                    <div className="flex items-center gap-2">
-                                        <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                        <span className="text-xs font-bold text-slate-700">5.0</span>
+                        {relatedCities.map((place) => (
+                            <Link
+                                to={`/cities/${place.id}`}
+                                key={place.id}
+                                className="flex gap-4 group items-center hover:bg-slate-50 p-2 rounded-2xl transition-all"
+                            >
+                                <div className="w-24 h-20 shrink-0 rounded-xl overflow-hidden shadow-sm">
+                                    <img
+                                        src={place.image_url}
+                                        alt={place.name}
+                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                    />
+                                </div>
+                                <div className="min-w-0">
+                                    <h4 className="font-bold text-slate-900 text-sm mb-1 truncate group-hover:text-primary-600 transition-colors">
+                                        {place.name}
+                                    </h4>
+                                    <p className="text-xs text-slate-400 mb-2 truncate">{place.country}</p>
+                                    <div className="flex items-center justify-between gap-4">
+                                        <div className="flex items-center gap-1.5 bg-yellow-400/10 px-2 py-0.5 rounded-lg">
+                                            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                            <span className="text-xs font-bold text-slate-700">
+                                                {place.popularity_score > 0 ? (place.popularity_score / 20).toFixed(1) : 'New'}
+                                            </span>
+                                        </div>
+                                        <p className="text-sm font-bold text-primary-600">
+                                            ${Math.round(place.avg_daily_cost)}<span className="text-[10px] font-normal text-slate-400">/day</span>
+                                        </p>
                                     </div>
-                                    <p className="text-sm font-bold text-primary-600 mt-1">${place.price}/day</p>
                                 </div>
                             </Link>
                         ))}

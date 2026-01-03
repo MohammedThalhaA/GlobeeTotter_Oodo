@@ -114,8 +114,22 @@ const TripEdit = () => {
                 tripsAPI.getById(tripId),
                 stopsAPI.getAll(tripId),
             ]);
-            if (tripRes.data.success) setTrip(tripRes.data.data);
-            if (stopsRes.data.success) setStops(stopsRes.data.data);
+            if (tripRes.data.success) {
+                const tripData = tripRes.data.data;
+                // Ensure dates are formatted as YYYY-MM-DD for input fields
+                setTrip({
+                    ...tripData,
+                    start_date: tripData.start_date.split('T')[0],
+                    end_date: tripData.end_date.split('T')[0]
+                });
+            }
+            if (stopsRes.data.success) {
+                setStops(stopsRes.data.data.map((stop: Stop) => ({
+                    ...stop,
+                    start_date: stop.start_date.split('T')[0],
+                    end_date: stop.end_date.split('T')[0]
+                })));
+            }
         } catch (error) {
             console.error('Failed to fetch trip:', error);
         } finally {
@@ -303,7 +317,7 @@ const TripEdit = () => {
     return (
         <div className="min-h-screen bg-slate-50 pb-20">
             {/* Header */}
-            <div className="bg-white border-b border-slate-200 sticky top-16 z-40">
+            <div className="bg-white border-b border-slate-200">
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
@@ -366,6 +380,47 @@ const TripEdit = () => {
                             placeholder="Describe your trip..."
                         />
                     </div>
+
+                    {/* Public Toggle */}
+                    <div className="mt-6 p-4 bg-slate-50 rounded-xl">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="font-medium text-slate-900">Make Trip Public</p>
+                                <p className="text-sm text-slate-500">Allow others to view and clone this trip</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setTrip({ ...trip, is_public: !trip.is_public })}
+                                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${trip.is_public ? 'bg-primary-600' : 'bg-slate-200'
+                                    }`}
+                            >
+                                <span
+                                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${trip.is_public ? 'translate-x-5' : 'translate-x-0'
+                                        }`}
+                                />
+                            </button>
+                        </div>
+                        {trip.is_public && (
+                            <div className="mt-3 p-3 bg-white rounded-lg border border-slate-200">
+                                <p className="text-xs text-slate-500 mb-1">Share URL:</p>
+                                <div className="flex items-center gap-2">
+                                    <code className="flex-1 text-sm text-primary-600 bg-primary-50 px-2 py-1 rounded">
+                                        {window.location.origin}/share/{tripId}
+                                    </code>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(`${window.location.origin}/share/${tripId}`);
+                                            alert('Share URL copied!');
+                                        }}
+                                        className="px-3 py-1 text-sm bg-primary-500 text-white rounded hover:bg-primary-600"
+                                    >
+                                        Copy
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </section>
 
                 {/* Stops Section */}
@@ -408,8 +463,8 @@ const TripEdit = () => {
                                     onDragOver={(e) => handleDragOver(e, stop.id)}
                                     onDragEnd={handleDragEnd}
                                     className={`border-2 rounded-xl transition-all ${draggedStop === stop.id
-                                            ? 'border-primary-400 bg-primary-50 opacity-50'
-                                            : 'border-slate-200 bg-white hover:border-slate-300'
+                                        ? 'border-primary-400 bg-primary-50 opacity-50'
+                                        : 'border-slate-200 bg-white hover:border-slate-300'
                                         }`}
                                 >
                                     {/* Stop Header */}
@@ -668,12 +723,19 @@ const TripEdit = () => {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-1.5">Date</label>
-                                    <input
-                                        type="date"
-                                        value={newActivity.scheduled_date}
-                                        onChange={(e) => setNewActivity({ ...newActivity, scheduled_date: e.target.value })}
-                                        className="input-field"
-                                    />
+                                    {(() => {
+                                        const currentStop = stops.find(s => s.id === showAddActivity);
+                                        return (
+                                            <input
+                                                type="date"
+                                                value={newActivity.scheduled_date}
+                                                onChange={(e) => setNewActivity({ ...newActivity, scheduled_date: e.target.value })}
+                                                min={currentStop?.start_date}
+                                                max={currentStop?.end_date}
+                                                className="input-field"
+                                            />
+                                        );
+                                    })()}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-1.5">Time</label>

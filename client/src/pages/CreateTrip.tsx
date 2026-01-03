@@ -164,7 +164,7 @@ const CreateTrip = () => {
 
                         {/* Cover Photo URL */}
                         <FloatingInput
-                            label="Cover Photo URL (optional)"
+                            label="Cover Photo URL (optional - leave empty for auto-generated image)"
                             name="cover_photo"
                             value={formData.cover_photo}
                             onChange={handleChange}
