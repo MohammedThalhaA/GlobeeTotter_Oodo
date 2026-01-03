@@ -9,15 +9,7 @@ import {
     MapPin,
     Heart,
     Map as MapIcon,
-    History,
-    Filter,
-    Plus,
-    Star,
-    Plane,
-    Bus,
-    Ship,
-    Car,
-    ArrowUpRight
+    Star
 } from 'lucide-react';
 import { DashboardSkeleton } from '../components/Skeleton';
 import type { City } from '../types';
@@ -29,6 +21,28 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
     const [upcomingTrips, setUpcomingTrips] = useState<any[]>([]);
     const [popularCities, setPopularCities] = useState<City[]>([]);
+    const [activeTab, setActiveTab] = useState('Most Popular');
+
+    // Mock data for other tabs based on duplicates/modifications of existing data for demo purposes
+    const getTabContent = () => {
+        if (activeTab === 'Special offer') {
+            return popularCities.map(city => ({
+                ...city,
+                id: `special-${city.id}`, // Unique keys
+                avg_daily_cost: (city.avg_daily_cost || 100) * 0.8 // 20% discount
+            }));
+        }
+        if (activeTab === 'Near Me') {
+            return popularCities.slice(0, 3).map(city => ({
+                ...city,
+                id: `near-${city.id}`, // Unique keys
+                country: '50km away' // Mock distance
+            }));
+        }
+        return popularCities;
+    };
+
+    const displayCities = getTabContent();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -143,100 +157,91 @@ const Dashboard = () => {
                             <TravelWidgets nextTrip={upcomingTrips[0]} userCurrency={user?.currency} />
                         </div>
 
-                        {/* Top 3 Tour Agencies */}
-                        <div className="bg-white p-6 rounded-3xl shadow-card h-fit">
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className="font-bold text-slate-900">Top 3 Tour Agencies</h3>
+                        {/* Recently Explored Map */}
+                        <div
+                            className="bg-white p-6 rounded-3xl shadow-card h-fit relative overflow-hidden group cursor-pointer transition-transform hover:scale-[1.02]"
+                            onClick={() => navigate('/explore')}
+                        >
+                            <div className="flex items-center justify-between mb-4 relative z-10">
+                                <h3 className="font-bold text-slate-900">Recently Explored</h3>
+                                <button className="p-2 bg-white/80 backdrop-blur-sm rounded-full transition-colors hover:bg-white shadow-sm"><MapIcon className="w-5 h-5 text-primary-600" /></button>
                             </div>
-                            <div className="space-y-4">
+
+                            <div className="relative h-64 w-full bg-blue-50 rounded-2xl overflow-hidden border border-slate-100 shadow-inner">
+                                {/* Map Background (Colorful) */}
+                                <img
+                                    src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/World_map_blank_without_borders.svg/2000px-World_map_blank_without_borders.svg.png"
+                                    alt="World Map"
+                                    className="w-full h-full object-cover opacity-60 mix-blend-multiply filter sepia hue-rotate-180 saturate-200"
+                                />
+
+                                {/* Location Pins */}
                                 {[
-                                    { name: 'Abz Tour Ltd.', loc: 'Dhaka, Bangladesh', img: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=100&h=100&fit=crop' },
-                                    { name: 'Tourp', loc: 'New York, USA', img: 'https://images.unsplash.com/photo-1571896349842-68c6d31d157a?w=100&h=100&fit=crop' },
-                                    { name: 'ManaTrip', loc: 'London, England', img: 'https://images.unsplash.com/photo-1549144511-3005a2b13824?w=100&h=100&fit=crop' }
-                                ].map((agency, i) => (
-                                    <div key={i} className="flex items-center gap-4 group cursor-pointer">
-                                        <img src={agency.img} alt={agency.name} className="w-12 h-12 rounded-xl object-cover" />
-                                        <div className="flex-1">
-                                            <h4 className="font-bold text-slate-900 text-sm">{agency.name}</h4>
-                                            <p className="text-xs text-slate-400">{agency.loc}</p>
-                                        </div>
-                                        <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-primary-600 transition-colors">
-                                            <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-white" />
-                                        </div>
-                                    </div>
+                                    { x: '20%', y: '30%', label: 'New York', color: 'bg-red-500' },
+                                    { x: '45%', y: '25%', label: 'Paris', color: 'bg-indigo-500' },
+                                    { x: '75%', y: '40%', label: 'Tokyo', color: 'bg-green-500' },
+                                    { x: '55%', y: '60%', label: 'Cape Town', color: 'bg-yellow-500' }
+                                ].map((pin, i) => (
+                                    <div
+                                        key={i}
+                                        className={`absolute w-4 h-4 ${pin.color} rounded-full border-2 border-white shadow-lg animate-bounce hover:scale-150 transition-transform`}
+                                        style={{ top: pin.y, left: pin.x, animationDelay: `${i * 0.2}s` }}
+                                        title={pin.label}
+                                    ></div>
                                 ))}
                             </div>
                         </div>
                     </div>
 
-                    {/* Transportation */}
-                    <div className="bg-white p-6 rounded-3xl shadow-card h-fit">
-                        <h3 className="font-bold text-slate-900 mb-6">Transportation</h3>
-                        <div className="grid grid-cols-3 gap-4">
-                            {[
-                                { icon: Plane, label: 'Flight' },
-                                { icon: Bus, label: 'Bus' },
-                                { icon: Ship, label: 'Boat' },
-                                { icon: Car, label: 'Car' },
-                                { icon: Plus, label: 'Add', primary: true }
-                            ].map((item, i) => (
-                                <div key={i} className="flex flex-col items-center gap-2 cursor-pointer group">
-                                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${item.primary
-                                        ? 'bg-primary-600 text-white shadow-lg shadow-primary-200'
-                                        : 'bg-slate-50 text-slate-400 group-hover:bg-slate-100 group-hover:text-primary-600'
-                                        }`}>
-                                        <item.icon className="w-6 h-6" />
-                                    </div>
-                                    <span className="text-xs font-medium text-slate-500">{item.label}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Recent Hotel Booking Table */}
-                    <div className="col-span-1 md:col-span-2 bg-white p-6 rounded-3xl shadow-card">
-                        <div className="flex items-center justify-between mb-6">
-                            <h3 className="font-bold text-slate-900">Recent Hotel Booking</h3>
-                            <div className="flex items-center gap-2 text-xs text-slate-500 border border-slate-200 px-3 py-1 rounded-full cursor-pointer hover:bg-slate-50">
-                                <Filter className="w-3 h-3" />
-                                <span>Filter</span>
+                    {/* Recent Activity Card (Merged Tables) */}
+                    <div className="bg-white p-6 rounded-3xl shadow-card space-y-8">
+                        {/* Recent Trips Table */}
+                        <div>
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="font-bold text-slate-900">Recent Trips</h3>
+                                <button className="text-xs text-primary-600 font-bold hover:underline">View All</button>
+                            </div>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm text-left">
+                                    <thead className="text-xs text-slate-400 uppercase bg-slate-50/50">
+                                        <tr>
+                                            <th className="px-4 py-3 rounded-l-xl">Trip Destination</th>
+                                            <th className="px-4 py-3">Date</th>
+                                            <th className="px-4 py-3 rounded-r-xl text-right">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-50">
+                                        {[
+                                            { title: 'Swiss Alps Adventure', date: '12-18 Oct 2023', image: 'https://images.unsplash.com/photo-1531310197839-ccf54634509e?w=100&h=100&fit=crop', status: 'Completed', statusColor: 'text-green-600 bg-green-50' },
+                                            { title: 'Kyoto Cultural Tour', date: '25-30 Sep 2023', image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=100&h=100&fit=crop', status: 'Completed', statusColor: 'text-green-600 bg-green-50' },
+                                            { title: 'Bali Beach Escape', date: '10-25 Aug 2023', image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=100&h=100&fit=crop', status: 'Completed', statusColor: 'text-green-600 bg-green-50' }
+                                        ].map((trip, i) => (
+                                            <tr key={i} className="group hover:bg-slate-50/50 transition-colors">
+                                                <td className="px-4 py-3">
+                                                    <div className="flex items-center gap-3">
+                                                        <img src={trip.image} alt={trip.title} className="w-10 h-10 rounded-lg object-cover" />
+                                                        <span className="font-bold text-slate-900 group-hover:text-primary-600 transition-colors">{trip.title}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-4 py-3 text-slate-500">
+                                                    <div className="flex items-center gap-2">
+                                                        <Calendar className="w-3 h-3 text-slate-400" />
+                                                        {trip.date}
+                                                    </div>
+                                                </td>
+                                                <td className="px-4 py-3 text-right">
+                                                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${trip.statusColor}`}>
+                                                        {trip.status}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
 
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm text-left">
-                                <thead className="text-xs text-slate-400 uppercase bg-slate-50/50">
-                                    <tr>
-                                        <th className="px-4 py-3 rounded-l-xl">SL</th>
-                                        <th className="px-4 py-3">Hotel</th>
-                                        <th className="px-4 py-3">Date</th>
-                                        <th className="px-4 py-3">Total</th>
-                                        <th className="px-4 py-3 rounded-r-xl">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-50">
-                                    {[
-                                        { sl: '01', hotel: 'Hotel Abtrip', date: '20 Dec, 2023', time: '11:44', total: '150$', status: 'Confirmed', statusColor: 'bg-green-100 text-green-600' },
-                                        { sl: '02', hotel: 'Bbntrip Hotel', date: '21 Dec, 2023', time: '11:44', total: '50$', status: 'Pending', statusColor: 'bg-orange-100 text-orange-600' }
-                                    ].map((row, i) => (
-                                        <tr key={i} className="group hover:bg-slate-50/50 transition-colors">
-                                            <td className="px-4 py-4 text-slate-400">{row.sl}</td>
-                                            <td className="px-4 py-4 font-semibold text-slate-900">{row.hotel}</td>
-                                            <td className="px-4 py-4">
-                                                <div className="text-slate-900">{row.date}</div>
-                                                <div className="text-xs text-slate-400">{row.time}</div>
-                                            </td>
-                                            <td className="px-4 py-4 font-bold text-slate-900">{row.total}</td>
-                                            <td className="px-4 py-4">
-                                                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${row.statusColor}`}>
-                                                    {row.status}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+
                     </div>
                 </div>
             </div>
@@ -244,10 +249,11 @@ const Dashboard = () => {
             {/* Bottom Row: Cities Grid */}
             <div className="space-y-6">
                 <div className="flex items-center gap-4 border-b border-slate-100 pb-1">
-                    {['Most Popular', 'Special offer', 'Near Me'].map((tab, i) => (
+                    {['Most Popular', 'Special offer', 'Near Me'].map((tab) => (
                         <button
                             key={tab}
-                            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${i === 0
+                            onClick={() => setActiveTab(tab)}
+                            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === tab
                                 ? 'bg-primary-600 text-white shadow-lg shadow-primary-200'
                                 : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
                                 }`}
@@ -264,15 +270,15 @@ const Dashboard = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {popularCities.map((city) => (
-                        <Link to={`/cities/${city.id}`} key={city.id} className="group block bg-white rounded-3xl p-3 shadow-card hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                    {displayCities.map((city) => (
+                        <Link to={`/cities/${city.id.toString().replace('special-', '').replace('near-', '')}`} key={city.id} className="group block bg-white rounded-3xl p-3 shadow-card hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                             <div className="relative h-48 rounded-2xl overflow-hidden mb-4">
                                 <img src={city.image_url} alt={city.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                                 <button className="absolute top-3 right-3 w-8 h-8 bg-white/30 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white text-white hover:text-red-500 transition-colors">
                                     <Heart className="w-4 h-4" />
                                 </button>
                                 <div className="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-lg">
-                                    {Math.floor(Math.random() * 5) + 2} Offers
+                                    {activeTab === 'Special offer' ? 'Special Deal!' : (Math.floor(Math.random() * 5) + 2 + ' Offers')}
                                 </div>
                             </div>
 

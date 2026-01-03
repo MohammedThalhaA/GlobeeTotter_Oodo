@@ -25,20 +25,7 @@ const TopBar = () => {
             {/* Right Side Actions */}
             <div className="flex items-center gap-8">
                 {/* Contact Info (Hidden on small screens) */}
-                <div className="hidden lg:flex items-center gap-6 text-sm font-medium text-slate-600">
-                    <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-white">
-                            <Phone className="w-4 h-4" />
-                        </div>
-                        <span>+ 2 025 274 9133</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-white">
-                            <Mail className="w-4 h-4" />
-                        </div>
-                        <span className="truncate max-w-[150px]">info@urwebsite.com</span>
-                    </div>
-                </div>
+
 
                 {/* Notifications & Profile */}
                 <div className="flex items-center gap-4 pl-8 border-l border-slate-200">

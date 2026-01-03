@@ -1,12 +1,9 @@
-import { useState, type FormEvent } from 'react';
+import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { tripsAPI } from '../services/api';
 import FloatingInput from '../components/FloatingInput';
 import FloatingTextarea from '../components/FloatingTextarea';
 import Button from '../components/Button';
-import UnsavedChangesModal from '../components/UnsavedChangesModal';
-import { useUnsavedChanges } from '../hooks/useUnsavedChanges';
-import { useToast } from '../context/ToastContext';
 import {
     ArrowLeft,
     Globe,
@@ -17,11 +14,6 @@ const CreateTrip = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-
-    // Unsaved changes protection
-    const { isDirty, setIsDirty, showModal, confirmNavigation, cancelNavigation, markAsSaved } = useUnsavedChanges();
-    const { showToast } = useToast();
-    void isDirty;
 
     const [formData, setFormData] = useState({
         title: '',
@@ -40,12 +32,6 @@ const CreateTrip = () => {
             ...prev,
             [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
         }));
-        setIsDirty(true);
-    };
-
-    const handleCancel = () => {
-        markAsSaved();
-        navigate(-1);
     };
 
     const handleSubmit = async (e: FormEvent) => {
@@ -67,8 +53,6 @@ const CreateTrip = () => {
         try {
             const response = await tripsAPI.create(formData);
             if (response.data.success) {
-                markAsSaved();
-                showToast('success', 'Trip created successfully!');
                 navigate(`/trips/${response.data.data.id}`);
             }
         } catch (err: unknown) {
@@ -89,18 +73,11 @@ const CreateTrip = () => {
 
     return (
         <div className="min-h-screen bg-slate-50">
-            {/* Unsaved Changes Modal */}
-            <UnsavedChangesModal
-                isOpen={showModal}
-                onStay={cancelNavigation}
-                onLeave={confirmNavigation}
-            />
-
             <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Header */}
                 <div className="mb-8">
                     <button
-                        onClick={handleCancel}
+                        onClick={() => navigate(-1)}
                         className="flex items-center gap-2 text-slate-600 hover:text-slate-900 mb-4 transition-colors"
                     >
                         <ArrowLeft className="w-5 h-5" />
